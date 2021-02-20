@@ -1,0 +1,75 @@
+\documentclass[
+    emulatestandardclasses,
+    parskip=half,
+]{article}
+\usepackage{scrhack}
+
+\usepackage[a4paper,
+    top=1.25in,
+    left=.75in,
+    bottom=1.5in,
+    right=.75in
+]{geometry}
+\usepackage{subfiles}
+
+\usepackage[british]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{fontenc}
+
+\usepackage{csquotes,graphicx,caption,subcaption,float,wrapfig}
+\usepackage{booktabs,multirow,makecell,longtable,threeparttable,tabularx}
+\usepackage{pdflscape}
+\usepackage{pdfpages}
+\usepackage[toc, page]{appendix}
+
+\usepackage[
+	separate-uncertainty   = true,
+	multi-part-units       = single,
+	range-units            = single,
+	list-units             = single,
+	table-number-alignment = center,
+	table-text-alignment   = center
+]{siunitx}
+\usepackage{gensymb,mathtools,amssymb,xfrac}
+\usepackage[italicdiff]{physics}
+\usepackage{upgreek,chemmacros,chemfig}
+
+
+\usepackage[hidelinks]{hyperref}
+\usepackage[nameinlink,noabbrev]{cleveref}
+\usepackage[style=authoryear-ibid]{biblatex}
+\usepackage{todonotes}
+
+% \maxdeadcycles=1000
+
+\DeclareSIUnit\G{G}
+\chemsetup{ modules = all }
+\chemsetup[reactions]{
+	tag-open = (,
+	tag-close =)
+}
+
+\addbibresource{biblio.bib}
+
+\newcommand{\textapprox}{\raisebox{0.5ex}{\texttildelow}}
+\newcommand{\RNum}[1]{\uppercase\expandafter{\romannumeral #1\relax}}
+
+\begin{document}
+    \title{\textit{(Working Title)} RF1:RF2 Paradox}
+    \date{\today}
+    \author{Sulaiman Sulaiman}
+    \maketitle
+
+    \begin{abstract}
+    \end{abstract}
+    \section{Introduction}
+    \section{Methods}
+    \section{Results}
+    \section{Discussion}
+    \section{Conclusions}
+
+	\newpage \phantomsection
+	\addcontentsline{toc}{chapter}{Bibliography}
+	\printbibliography
+	\appendix\appendixpage
+\end{document}

@@ -1,4 +1,4 @@
-import json, itertools
+import os, json, itertools
 import pandas as pd
 import numpy as np
 
@@ -6,8 +6,8 @@ from scipy import stats
 
 import matplotlib.pyplot as plt
 
-def loadDataFrame(path):
-    with open(path, 'r') as file: gc = json.load(file)
+def loadDataFrame(file):
+    gc = json.load(file)
 
     # Loading the dict as it is to a DataFrame will produce a DataFrame
     # whose columns are the IDs and values are dicts
@@ -91,5 +91,10 @@ def plotGCvsFreq(name, freq, gc3 = True, pdf = False):
         fig.savefig(f"plot/{name}-stop-{gcUsed}-shift{shift}.png")
         if(pdf): fig.savefig(f"plot/{name}-stop-{gcUsed}-shift{shift}.pdf")
 
-plotGCvsFreq("archaea",  calculateFreq(loadDataFrame("data/archaea_gene_gc.json")))
-plotGCvsFreq("bacteria", calculateFreq(loadDataFrame("data/bacteria_gene_gc.json")))
+from common import loadZip
+
+def loader(file):
+    name = os.path.basename(file.name)
+    plotGCvsFreq(name,  calculateFreq(loadDataFrame(file)))
+
+loadZip("data/gene-gc.zip", loader)

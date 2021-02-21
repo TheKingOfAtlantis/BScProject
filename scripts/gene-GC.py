@@ -1,3 +1,6 @@
+import os
+from zipfile import ZipFile
+
 from Bio import SeqIO, SeqUtils
 from Bio.SeqFeature import FeatureLocation
 
@@ -33,3 +36,10 @@ if __name__ == "__main__":
     bacteria_gene_gc = dict(loadZip("data/Bacteria_filtered_genomes.zip", LoadRecord))
     with open("data/bacteria_gene_gc.json", 'w') as file: json.dump(bacteria_gene_gc, file)
     del bacteria_gene_gc
+
+    os.chdir("data/") # To avoid the zip file containing a "data/" subdirectory
+    with ZipFile("gene-gc.zip", "w") as out:
+        out.write("archaea_gene_gc.json")
+        out.write("bacteria_gene_gc.json")
+        os.remove("archaea_gene_gc.json")
+        os.remove("bacteria_gene_gc.json")

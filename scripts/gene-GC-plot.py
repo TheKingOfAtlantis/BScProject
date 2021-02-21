@@ -91,10 +91,10 @@ def plotGCvsFreq(name, freq, gc3 = True, pdf = False):
         fig.savefig(f"plot/{name}-stop-{gcUsed}-shift{shift}.png")
         if(pdf): fig.savefig(f"plot/{name}-stop-{gcUsed}-shift{shift}.pdf")
 
+def main(file):
+    name = os.path.basename(file.name).split("_")[0]
+    plotGCvsFreq(name, calculateFreq(loadDataFrame(file)))
+
 from common import loadZip
-
-def loader(file):
-    name = os.path.basename(file.name)
-    plotGCvsFreq(name,  calculateFreq(loadDataFrame(file)))
-
-loadZip("data/gene-gc.zip", loader)
+if __name__ == "__main__":
+    loadZip("data/gene-gc.zip", main)

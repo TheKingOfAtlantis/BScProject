@@ -4,21 +4,25 @@ from Bio.SeqFeature import FeatureLocation
 from common import loadZip
 
 def LoadRecord(file):
-    record = next(SeqIO.parse(file, "embl"))
-    data = []
-    for feature in filter(lambda x: x.type in "CDS", record.features):
-        for shift in range(0, 6): # Check across 2 codons
-            loc   = feature.location + shift
-            seq = loc.extract(record.seq)
+    record = next(SeqIO.parse(file, "embl")) # Load the record from the file
+    data = [] # We will store the data we generate here
 
-            # Need to ensure we have a stop codon
+    # Filtering out the features which != CDS and iterate over remainder
+    for feature in filter(lambda x: x.type in "CDS", record.features):
+        # We want to explore value across frameshifts
+        # So shift the frame over 2 codons worth of nucleotides
+        for shift in range(0, 6): # Check across 2 codons
+            loc   = feature.location + shift # Add the shift the "in-frame" ORF location
+            seq = loc.extract(record.seq)    # Extract the DNA sequence using the location
+
+            # Need to ensure we have a stop codon, otherwise we don't care
             if seq[-3:] in ["TAA", "TGA", "TAG"]:
-                data.append({
-                    "shift": shift,
-                    "gc": SeqUtils.GC123(seq),
-                    "stop": str(seq[-3:])
+                data.append({                  # Record the following:
+                    "shift": shift,            # Shift we applied to find codon
+                    "gc": SeqUtils.GC123(seq), # GC (incl. GC123) of sequence (given the shift)
+                    "stop": str(seq[-3:])      # What stop codon we found
                 })
-    return (record.id, data)
+    return (record.id, data) # Pair the data with the record ID
 
 import json
 if __name__ == "__main__":

@@ -8,23 +8,34 @@ if __name__ == "__main__":
     exit(-1)
 
 def __loadZip(x):
+    # Each process calls this function
+    # In here we get the file and pass it to the operation
+
+    # Expand the parameters given to this function:
+    # 1) Path to the zip file
+    # 2) Index position of the file within the zip file
+    # 3) Operation to be performed on the file
     zipPath, pos, op = x
-    with ZipFile(zipPath) as zipFile:
-        path = zipFile.namelist()[pos]
-        file = io.TextIOWrapper(zipFile.open(path))
-        return op(file)
+
+    with ZipFile(zipPath) as zipFile:               # Open zip file
+        path = zipFile.namelist()[pos]              # Get path of file in zip file given index
+        file = io.TextIOWrapper(zipFile.open(path)) # Get the file and since given as bytes => Convert to Text
+        return op(file)                             # Perform operation on file
 
 def loadZip(path, operation, progress = True):
     with ZipFile(path) as zipFile:
+        # Load the zip file just so we can get the number of files present
         count = len(zipFile.namelist())
     with Pool(os.cpu_count()) as pool:
+        # Create a pool of process which are used to run operations on each file in zip file
+        # Check if we want to display the progress
         if progress: return list(tqdm.tqdm(
-            pool.imap(__loadZip, zip(
-                itertools.repeat(path),
-                range(1, count),
-                itertools.repeat(operation)
+            pool.imap(__loadZip, zip(        # Since we can only pass a single argument: zip them together
+                itertools.repeat(path),      # Use a repeat iterator so every process has path to the zip file
+                range(1, count),             # Then pass each file an index to the file itself (not from 0 to avoid root directory)
+                itertools.repeat(operation)  # Then pass the operation to be run to each process
             )),
-            total=count - 1
+            total=count - 1 # Pass total count to tqdm but remove one as we ignore the root directory
         ))
         else: return pool.map(__loadZip, zip(
             itertools.repeat(path),

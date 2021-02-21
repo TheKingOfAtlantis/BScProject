@@ -1,53 +1,95 @@
-
 import json, itertools
 import pandas as pd
 import numpy as np
+
 from scipy import stats
 
 import matplotlib.pyplot as plt
 
-with open("data/archaea_gene_gc.json", 'r') as file: archaea_gene_gc = json.load(file)
+def loadDataFrame(path):
+    with open(path, 'r') as file: gc = json.load(file)
 
-df = pd.concat({k:pd.DataFrame(v) for k,v in archaea_gene_gc.items()})
+    # Loading the dict as it is to a DataFrame will produce a DataFrame
+    # whose columns are the IDs and values are dicts
+    # So first we go through each dict and produce a DataFrame from its
+    # values, which gives us a Dict[str:DataFrame] type => Instead of calling
+    # pd.DataFrame (which would set IDs as columns still), we use concat to
+    # join all the DataFrames using the ID as an index
+    df = pd.concat({k:pd.DataFrame(v) for k,v in gc.items()})
 
-df[["gc", "gc1", "gc2", "gc3"]] = pd.DataFrame(df.gc.tolist(), index=df.index)
-df = df[["shift", "stop", "gc", "gc3"]]
+    # Then we need to seperate the GC values which are read in as a tuple
+    # By converting the GC column to a list and passing that in as a DataFrame
+    # we can quickly separate the values
+    df[["gc", "gc1", "gc2", "gc3"]] = pd.DataFrame(df.gc.tolist(), index=df.index)
+    df = df[["shift", "stop", "gc", "gc3"]] # Select from the columns we care about
 
-df = df.reset_index().rename(columns={"level_0": "id"}).drop("level_1", axis=1)
-freq = df
-freq["freq"] = 1
-freq = pd.pivot_table(
-    df, values=["freq", "gc", "gc3"], index="id", columns=["stop", "shift"],
-    aggfunc={"freq": np.sum, "gc": np.mean, "gc3": np.mean }
-)
-freq["freq"] = freq["freq"].divide(freq["freq"].groupby("shift").sum(axis=1), axis=0)
-freq = freq.reorder_levels((2, 1, 0), axis=1).sort_index(axis=1)
+    # Return a DataFrame
+    # For ease of use (when we call pivot) we convert the indices to columns
+    # Dropping level_1 as these are the unique integer index values given which
+    # have no reason to keep reference to
+    return df.reset_index().rename(columns={"level_0": "id"}).drop("level_1", axis=1)
 
+def calculateFreq(df):
+    freq = df
+    freq["freq"] = 1 # As of right now we can see the frequence of each is 1 (as this is true)
 
-for shift in freq.columns.get_level_values("shift").unique():
-    fig, ax = plt.subplots(figsize=(16,9))
-    for codon in freq[shift].columns.get_level_values("stop").unique():
-        xData = freq[shift][codon]["gc"].dropna()
-        yData = freq[shift][codon]["freq"].dropna()
+    # We then use pivot to perform the bulk of the magic
+    # We use the IDs as the new indices (which is why we called reset_index earlier)
+    # We create columns for each stop codon and frame-shift value
+    # The the value of these columns correspond to the:
+    #  - Total frequency of each codon in each frame
+    #  - Average GC of each sequence in each frame
+    #  - Average GC3 of each sequence in each frame
+    freq = pd.pivot_table(
+        df, values=["freq", "gc", "gc3"], index="id", columns=["stop", "shift"],
+        aggfunc={"freq": np.sum, "gc": np.mean, "gc3": np.mean }
+    )
+    # Normalise the frequence by dividing by the number of codons in each frame found in each genome
+    freq["freq"] = freq["freq"].divide(freq["freq"].groupby("shift", axis=1).sum(), axis=0)
+    # freq["freq"] = freq["freq"].divide(freq["freq"].sum(axis=1), axis=0) # Old normalisation strategy
+    return freq.reorder_levels((2, 1, 0), axis=1).sort_index(axis=1) # Swap around order of columns
 
-        colour = next(ax._get_lines.prop_cycler)['color']
+def plotGCvsFreq(name, freq, gc3 = True, pdf = False):
+    # GC3 parameter tells us if we are using GC or GC3 in plots
+    # Default: Use GC3
+    if(gc3): gcUsed = "gc3"
+    else: gcUsed = "gc"
 
-        linreg = stats.linregress(xData, yData)
-        sc = ax.scatter(xData, yData, label=codon, color=colour)
+    # Create new plot for each frameshift
+    for shift in freq.columns.get_level_values("shift").unique():
+        fig, ax = plt.subplots(figsize=(16,9))
+        for codon in freq[shift].columns.get_level_values("stop").unique():
+            # Get the frequence and GC(3)
+            xData = freq[shift][codon][gcUsed].dropna()
+            yData = freq[shift][codon]["freq"].dropna() * 100
 
-        x = np.linspace(xData.min(), xData.max())
-        ax.plot(x, x * linreg.slope + linreg.intercept, color=colour)
-        ax.annotate(
-            f"y = {linreg.slope:.2g}x + {linreg.intercept:.2g}\n$r^2=${linreg.rvalue:.2g},p-value={linreg.pvalue:.2g}\nError: m={linreg.stderr:.2g}, c={linreg.intercept_stderr:.2g}",
-            xy=(xData.max(), xData.max() * linreg.slope + linreg.intercept)
-        )
-    ax.legend()
+            # Use this so we can give both line and scatter points the same colour
+            colour = next(ax._get_lines.prop_cycler)['color']
 
-    ax.spines['right'].set_visible(False)
-    ax.spines['top'].set_visible(False)
+            # Plot the raw data values
+            ax.scatter(xData, yData, label=codon, color=colour)
 
-    ax.set_xlabel("%GC3 Content")
-    ax.set_ylabel("Relative Stop Frequency")
+            linreg = stats.linregress(xData, yData)   # Calculate linear regression/best fit on the data
+            x = np.linspace(xData.min(), xData.max()) # Produces set of x values within range of data
+            # Plot best fit line
+            ax.plot(x, x * linreg.slope + linreg.intercept, color=colour)
+            # Annotate line with stats
+            ax.annotate(
+                f"$y = {linreg.slope:.2g}x + {linreg.intercept:.2g}$\n"               # y = mx + c
+                f"$r^2=${linreg.rvalue:.2g}, $p$-value={linreg.pvalue:.2g}\n"         # r-squared & p-value
+                f"Error: $m=${linreg.stderr:.2g}, $c=${linreg.intercept_stderr:.2g}", # Error values for m & c
+                xy=(xData.max(), xData.max() * linreg.slope + linreg.intercept)
+            )
+        ax.legend()
 
-    fig.savefig(f"plot/archaea-stop-gc-shift{shift}.png")
-    fig.savefig(f"plot/archaea-stop-gc-shift{shift}.pdf")
+        ax.spines['right'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+
+        ax.set_xlabel("{} Content (%)".format(gcUsed.upper()))
+        ax.set_ylabel("Stop Codon Frequency (%)")
+
+        fig.savefig(f"plot/{name}-stop-{gcUsed}-shift{shift}.png")
+        if(pdf): fig.savefig(f"plot/{name}-stop-{gcUsed}-shift{shift}.pdf")
+
+plotGCvsFreq("archaea",  calculateFreq(loadDataFrame("data/archaea_gene_gc.json")))
+plotGCvsFreq("bacteria", calculateFreq(loadDataFrame("data/bacteria_gene_gc.json")))

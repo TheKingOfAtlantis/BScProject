@@ -2,7 +2,8 @@
 ## Manual Ignore Rules
 ##
 
-data/*_filtered_genomes.zip
+data/
+plot/
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,latex
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,latex

@@ -87,16 +87,16 @@ def plotGCvsFreq(name, freq, gc3 = True, pdf = False):
         ax.set_xlabel("{} Content (%)".format(gcUsed.upper()))
         ax.set_ylabel("Stop Codon Frequency (%)")
 
-        fig.savefig(f"plot/cds/{name}-stop-{gcUsed}-shift{shift}.png")
-        if(pdf): fig.savefig(f"plot/cds/{name}-stop-{gcUsed}-shift{shift}.pdf")
+        fig.savefig(f"plot/gc/cds/{name}-stop-{gcUsed}-shift{shift}.png")
+        if(pdf): fig.savefig(f"plot/gc/cds/{name}-stop-{gcUsed}-shift{shift}.pdf")
 
 
-import io
-from zipfile import ZipFile
-with ZipFile("../data/gene-gc.zip") as zipFile:
-    for path in zipFile.namelist():
-        file = io.TextIOWrapper(zipFile.open(path))
-        name = os.path.basename(file.name).split("_")[0]
-        freq = calculateFreq(loadDataFrame(file))
-        freq["freq"].groupby("shift", axis=1).sum().plot(kind="bar")
-        # plotGCvsFreq(name, freq)
+from common import loadGlob
+
+def load(file):
+    name = os.path.basename(file.name).split(".")[0]
+    freq = calculateFreq(loadDataFrame(file))
+    plotGCvsFreq(name, freq)
+
+if __name__ in "__main__":
+    loadGlob("data/gc/cds/*.json", load)

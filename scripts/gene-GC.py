@@ -4,7 +4,7 @@ from zipfile import ZipFile
 from Bio import SeqIO, SeqUtils
 from Bio.SeqFeature import FeatureLocation
 
-from common import loadZip
+from common import loadGlob
 
 def LoadRecord(file):
     record = next(SeqIO.parse(file, "embl")) # Load the record from the file
@@ -29,17 +29,10 @@ def LoadRecord(file):
 
 import json
 if __name__ == "__main__":
-    archaea_gene_gc = dict(loadZip("data/Archaea_filtered_genomes.zip", LoadRecord))
-    with open("data/archaea_gene_gc.json", 'w') as file: json.dump(archaea_gene_gc, file)
+    archaea_gene_gc = dict(loadGlob("data/archaea_filtered_genomes/*", LoadRecord))
+    with open("data/gc/cds/archaea.json", 'w') as file: json.dump(archaea_gene_gc, file)
     del archaea_gene_gc
 
-    bacteria_gene_gc = dict(loadZip("data/Bacteria_filtered_genomes.zip", LoadRecord))
-    with open("data/bacteria_gene_gc.json", 'w') as file: json.dump(bacteria_gene_gc, file)
+    bacteria_gene_gc = dict(loadGlob("data/bacteria_filtered_genomes/*", LoadRecord))
+    with open("data/gc/cds/bacteria.json", 'w') as file: json.dump(bacteria_gene_gc, file)
     del bacteria_gene_gc
-
-    os.chdir("data/") # To avoid the zip file containing a "data/" subdirectory
-    with ZipFile("gene-gc.zip", "w") as out:
-        out.write("archaea_gene_gc.json")
-        out.write("bacteria_gene_gc.json")
-        os.remove("archaea_gene_gc.json")
-        os.remove("bacteria_gene_gc.json")

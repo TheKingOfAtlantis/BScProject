@@ -46,7 +46,6 @@ def calculateFreq(df):
     )
     # Normalise the frequence by dividing by the number of codons in each frame found in each genome
     freq["freq"] = freq["freq"].divide(freq["freq"].groupby("shift", axis=1).sum(), axis=0)
-    # freq["freq"] = freq["freq"].divide(freq["freq"].sum(axis=1), axis=0) # Old normalisation strategy
     return freq.reorder_levels((2, 1, 0), axis=1).sort_index(axis=1) # Swap around order of columns
 
 def plotGCvsFreq(name, freq, gc3 = True, pdf = False):
@@ -88,13 +87,16 @@ def plotGCvsFreq(name, freq, gc3 = True, pdf = False):
         ax.set_xlabel("{} Content (%)".format(gcUsed.upper()))
         ax.set_ylabel("Stop Codon Frequency (%)")
 
-        fig.savefig(f"plot/{name}-stop-{gcUsed}-shift{shift}.png")
-        if(pdf): fig.savefig(f"plot/{name}-stop-{gcUsed}-shift{shift}.pdf")
+        fig.savefig(f"plot/cds/{name}-stop-{gcUsed}-shift{shift}.png")
+        if(pdf): fig.savefig(f"plot/cds/{name}-stop-{gcUsed}-shift{shift}.pdf")
 
-def main(file):
-    name = os.path.basename(file.name).split("_")[0]
-    plotGCvsFreq(name, calculateFreq(loadDataFrame(file)))
 
-from common import loadZip
-if __name__ == "__main__":
-    loadZip("data/gene-gc.zip", main)
+import io
+from zipfile import ZipFile
+with ZipFile("../data/gene-gc.zip") as zipFile:
+    for path in zipFile.namelist():
+        file = io.TextIOWrapper(zipFile.open(path))
+        name = os.path.basename(file.name).split("_")[0]
+        freq = calculateFreq(loadDataFrame(file))
+        freq["freq"].groupby("shift", axis=1).sum().plot(kind="bar")
+        # plotGCvsFreq(name, freq)

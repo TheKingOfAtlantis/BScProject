@@ -1,13 +1,32 @@
-import os, io, itertools         # Various useful and necessary imports
-import tqdm                      # Used to track progress
-from zipfile import ZipFile      # Used to access the zipfile
-from multiprocessing import Pool # Used to perform access in parallel fashion
+import itertools
+from zipfile import ZipFile # Used to access the zipfile
 
 if __name__ == "__main__":
     print("Do not directly call this file! Instead import it where you need it")
     exit(-1)
 
+def __loadParallel(callable, param, count, progress = True):
+    import os
+    import tqdm # Used to track progress
+    from multiprocessing import Pool # Used to perform access in parallel fashion
+
+    # Create a pool of process which are used to run operations on each file
+    with Pool(min( # Lets not use up more than we need
+        os.cpu_count(),
+        count
+    )) as pool:
+
+        # Check if we want to display the progress (using tqdm)
+        if progress: result = list(tqdm.tqdm(
+            pool.imap(callable, param),
+            total=count # Pass number of files to process
+        ))
+        else: result = pool.map(callable, param)
+        return [x for x in result if x is not None] # Remove any None values
+
+
 def __loadZip(x):
+    import io
     # Each process calls this function
     # In here we get the file and pass it to the operation
 
@@ -28,25 +47,36 @@ def __loadZip(x):
         return op(file)                             # Perform operation on file
 
 def loadZip(path, operation, progress = True):
+
     with ZipFile(path) as zipFile:
-        # Load the zip file just so we can get the number of files present
         count = len(zipFile.namelist())
 
-    with Pool(min(
-        os.cpu_count(),
-        count
-    )) as pool: # Lets not use up more than we need
-        # Create a pool of process which are used to run operations on each file in zip file
-
-        param = zip(        # Since we can only pass a single argument: tuple them together
+    # Load the zip file just so we can get the number of files present
+    return __loadParallel(
+        __loadZip,
+        zip( # Since we can only pass a single argument: zip them together
             itertools.repeat(path),      # Use a repeat iterator so every process has path to the zip file
             range(0, count),             # Then pass each file an index to the file itself
             itertools.repeat(operation)  # Then pass the operation to be run to each process
-        )
+        ), count
+    )
 
-        # Check if we want to display the progress
-        if progress: return list(tqdm.tqdm(
-            pool.imap(__loadZip, param),
-            total=count # Pass total count to tqdm but remove one as we ignore the root directory
-        ))
-        else: return pool.map(__loadZip, param)
+def __loadGlob(x):
+    # Each process calls this function
+    # In here we get the file and pass it to the operation
+    path, op = x
+
+    with open(path) as file: # Open zip file
+        return op(file)      # Perform operation on file
+def loadGlob(pattern, operation, progress = True):
+    import glob
+
+
+    paths = glob.glob(pattern)
+    return __loadParallel(
+        __loadGlob,
+        zip( # Since we can only pass a single argument: zip them together
+            paths, # List of paths to process
+            itertools.repeat(operation)  # Operation to be run in each process/file
+        ), len(paths)
+    )

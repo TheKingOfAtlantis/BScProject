@@ -29,10 +29,10 @@ def LoadRecord(file):
 
 import json
 if __name__ == "__main__":
-    archaea_gene_gc = dict(loadGlob("data/archaea_filtered_genomes/*", LoadRecord))
+    archaea_gene_gc = dict(loadGlob("data/genomes/archaea/*", LoadRecord))
     with open("data/gc/cds/archaea.json", 'w') as file: json.dump(archaea_gene_gc, file)
     del archaea_gene_gc
 
-    bacteria_gene_gc = dict(loadGlob("data/bacteria_filtered_genomes/*", LoadRecord))
+    bacteria_gene_gc = dict(loadGlob("data/genomes/bacteria/*", LoadRecord))
     with open("data/gc/cds/bacteria.json", 'w') as file: json.dump(bacteria_gene_gc, file)
     del bacteria_gene_gc

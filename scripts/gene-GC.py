@@ -6,12 +6,12 @@ from Bio.SeqFeature import FeatureLocation
 
 from common import loadGlob
 
-def LoadRecord(file):
+def LoadRecord(file, toFind = "CDS"):
     record = next(SeqIO.parse(file, "embl")) # Load the record from the file
     data = [] # We will store the data we generate here
 
     # Filtering out the features which != CDS and iterate over remainder
-    for feature in filter(lambda x: x.type in "CDS", record.features):
+    for feature in filter(lambda x: x.type in toFind, record.features):
         # We want to explore value across frameshifts
         # So shift the frame over 2 codons worth of nucleotides
         for shift in range(0, 6): # Check across 2 codons
@@ -28,11 +28,21 @@ def LoadRecord(file):
     return (record.id, data) # Pair the data with the record ID
 
 import json
+import pathlib
 if __name__ == "__main__":
-    archaea_gene_gc = dict(loadGlob("data/genomes/archaea/*", LoadRecord))
-    with open("data/gc/cds/archaea.json", 'w') as file: json.dump(archaea_gene_gc, file)
-    del archaea_gene_gc
 
-    bacteria_gene_gc = dict(loadGlob("data/genomes/bacteria/*", LoadRecord))
-    with open("data/gc/cds/bacteria.json", 'w') as file: json.dump(bacteria_gene_gc, file)
-    del bacteria_gene_gc
+    toFind = ["CDS", "tRNA"]
+
+    for geneType in toFind:
+        # Make sure we have the path to export to (including parents)
+        pathlib.Path(f"data/gc/{geneType.lower()}").mkdir(parents=True, exist_ok=True)
+
+        print(f"Archaea {geneType}:")
+        archaea_gene_gc = dict(loadGlob("data/genomes/archaea/*", LoadRecord, extra=toFind))
+        with open(f"data/gc/{geneType.lower()}/archaea.json", 'w') as file: json.dump(archaea_gene_gc, file)
+        del archaea_gene_gc
+
+        print(f"Bacteria {geneType}:")
+        bacteria_gene_gc = dict(loadGlob("data/genomes/bacteria/*", LoadRecord, extra=toFind))
+        with open(f"data/gc/{geneType.lower()}/bacteria.json", 'w') as file: json.dump(bacteria_gene_gc, file)
+        del bacteria_gene_gc

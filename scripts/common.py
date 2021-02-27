@@ -24,6 +24,12 @@ def __loadParallel(callable, param, count, progress = True):
         else: result = pool.map(callable, param)
         return [x for x in result if x is not None] # Remove any None values
 
+def __processFile(file, op, extra):
+    if(extra is None):
+        return op(file)
+    else:
+        if(type(extra) is tuple): return op(file, *extra)
+        else: return op(file, extra)
 
 def __loadZip(x):
     import io
@@ -34,7 +40,7 @@ def __loadZip(x):
     # 1) Path to the zip file
     # 2) Index position of the file within the zip file
     # 3) Operation to be performed on the file
-    zipPath, pos, op = x
+    zipPath, pos, op, extra = x
 
     with ZipFile(zipPath) as zipFile:  # Open zip file
         path = zipFile.namelist()[pos] # Get path of file in zip file given index
@@ -44,9 +50,9 @@ def __loadZip(x):
             return        # If so then return without doing anything
 
         file = io.TextIOWrapper(zipFile.open(path)) # Get the file and since given as bytes => Convert to Text
-        return op(file)                             # Perform operation on file
+        return __processFile(file, op, extra)       # Perform operation on file
 
-def loadZip(path, operation, progress = True):
+def loadZip(path, operation, progress = True, extra = None):
 
     with ZipFile(path) as zipFile:
         count = len(zipFile.namelist())
@@ -57,26 +63,28 @@ def loadZip(path, operation, progress = True):
         zip( # Since we can only pass a single argument: zip them together
             itertools.repeat(path),      # Use a repeat iterator so every process has path to the zip file
             range(0, count),             # Then pass each file an index to the file itself
-            itertools.repeat(operation)  # Then pass the operation to be run to each process
+            itertools.repeat(operation), # Then pass the operation to be run to each process
+            itertools.repeat(extra)      # Extra parameters to pass to operation
         ), count
     )
 
 def __loadGlob(x):
     # Each process calls this function
     # In here we get the file and pass it to the operation
-    path, op = x
+    path, op, extra = x
 
     with open(path) as file: # Open zip file
-        return op(file)      # Perform operation on file
-def loadGlob(pattern, operation, progress = True):
-    import glob
+        return __processFile(file, op, extra)
 
+def loadGlob(pattern, operation, progress = True, extra = None):
+    import glob
 
     paths = glob.glob(pattern)
     return __loadParallel(
         __loadGlob,
         zip( # Since we can only pass a single argument: zip them together
-            paths, # List of paths to process
-            itertools.repeat(operation)  # Operation to be run in each process/file
+            paths,                        # List of paths to process
+            itertools.repeat(operation),  # Operation to be run in each process/file
+            itertools.repeat(extra)       # Extra parameters to pass to operation
         ), len(paths)
     )

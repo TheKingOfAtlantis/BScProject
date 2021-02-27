@@ -1,7 +1,7 @@
 \documentclass[
     emulatestandardclasses,
     parskip=half,
-]{article}
+]{scrartcl}
 \usepackage{scrhack}
 
 \usepackage[a4paper,
@@ -49,21 +49,56 @@
 	tag-close =)
 }
 
+% \setlength{\parskip}{1em}
+
 \addbibresource{biblio.bib}
 
 \newcommand{\textapprox}{\raisebox{0.5ex}{\texttildelow}}
 \newcommand{\RNum}[1]{\uppercase\expandafter{\romannumeral #1\relax}}
 
 \begin{document}
-    \title{\textit{(Working Title)} RF1:RF2 Paradox}
+    \title{\textit{(Working Title)} UAG Codon Paradox}
     \date{\today}
     \author{Sulaiman Sulaiman}
     \maketitle
 
     \begin{abstract}
+        {\textbf{Abstract}\vspace{1em}}
+
+        Abstract goes here
     \end{abstract}
+
     \section{Introduction}
+        The termination of mRNA translation into proteins is classically controlled by a set of three stop codons: UAA, UAG, and UGA. Recognition of these codons triggers a choreographed sequence of events which result in the dismantling of the ribosome releasing the synthesised nascent peptide chain and the mRNA. Critical to this release process are release factors proteins - these proteins mimic the structure and function of tRNA \autocite{Nakamura2003}, recognising \& binding to the stop sequence and triggering the dismantling process.
+
+        In bacteria, three release factors (RF) are present of which RF1 (which recognises UAA and UAG) as well as RF2 (which recognises UAA and UGA) perform the recognition, with RF3 acting to release RF1/2 from the ribosome. Eukaryotes and Archaea, contain a single release factor which recognises the stop codons, called eRF1 and aRF1 respectively, these proteins share a various features \autocite{Alkalaeva2009}, so much so that aRF1 is able to replace the function of eRF1 \autocite{Dontsova2000}, both release factors are capable of recognising all three termination codons, unlike their bacterial counterparts.
+
+        \begin{wrapfigure}{r}{7.5cm}
+            \centering
+            \includegraphics[
+                clip, trim={0 5.5cm 0 0}
+            ]{"../plot/references/usage-vs-gc.jpg"}
+            \caption{Distribution of stop codon usage against GC of bacteria from \mancite\cite{Korkmaz2014}}
+            \label{fig:intro/codon-gc}
+        \end{wrapfigure}
+
+        The usage of these stop codons is under various pressures, including reducing readthrough rates, stopping out-of-frame reading and GC pressure on the genome. It has been observed that as the GC content of a bacterial genomes increases, the prevalence of UAA stop codons decreases while UGA increases, these codons follow what would be expected given their different GC content. Meanwhile, UAG breaks this trend, with its usage remaining low (20\%) and independent of the GC content of the genome, countering what otherwise be expected especially given how the other codons follow the pattern, \cref{fig:intro/codon-gc}. One theory postulates that usage of UGA and UAG co-evolved with the relative expression of RF1 and RF2, \mancite\autocite{Korkmaz2014}, (henceforth, referred to as the RF1:RF2 hypothesis). However, the RF1:RF2 hypothesis does not properly explain why the same pattern is seen in downstream addition stop codons, \autocite{Ho2019}, in bacteria these downstream stop codons appear not only to be not be selected for but selected against, thus additional stop codons do not act as a fail-safe to prevent readthrough errors, so whatever influence RF1/2 has on the terminating stop codons should not hold here, yet the pattern persists.
+
+        One could postulate that effects seen downstream may still be within the purview of RF1/2 through some other mechanism. As such, to properly isolate the influence of these proteins and to properly identify whether RF1:RF2 hypothesis holds true or if another mechanism is underlying the patterns seen, this project aims to investigating the usage of the stop codons in Eukaryotes and Archaea, given that they utilise a single release factor for the recognition of all termination codons, at the terminus of protein coding sequences, as well as downstream additional codons. Additionally usage of UAG and UGA in non-coding RNA (such as tRNA and rRNA) will be investigated, as it would be expected that any usage of the stop codons should only be correlated with GC, if the RF1:RF2 hypothesis is correct, as these do not participate in translation.
+
+
+    % \section{Introduction}
+    %     Termination of translation is controlled by a set of three codons: UAA, UGA and UAG. In bacteria these are recognised by RF1 (which recognises the UAA and UAG) and RF2 (which recognises UAA and UGA). In eukaryotes and archaea the termination codons are all recognised by eRF1 and aRF1 respectively (these two proteins share high sequence similarity).
+
+    %     The utilisation of these codons however is not uniform, initially being show by \autocite{PLACEHOLDER}, usage of UAA or UGA is correlated with the GC content of the genomes, meanwhile, the usage of UAG appears to be lower than the other stop codons while also being independent of the GC content of the genome. It was then shown by \autocite{PLACEHOLDER2}, that this pattern holds even across frame-shifts.
+
+    %     One hypothesis for the discrepancy between UAG and UGA usage could be an expression of the relative expression of RF1 and RF2 within bacteria, however exploring downstream usage of stop codons shows that the pattern persists, indicating that the ratio of RF1 to RF2 is not the primary driving factor of this.
+
+    %     In exploring this question this this project initially aims to explore if the previous established patterns seen with regards to GC content and stop codon usage within all three potential reading frames holds under various different conditions: First, when controlled for genus, in ncRNA one would expect the usage of stop codons would correlated with GC with no preference for either UGA or UAG, given that the ribosomal machinery (and in extension the RF1 and RF2 proteins) do not transcribe these
+
+
     \section{Methods}
+
     \section{Results}
         \subsection{Is pattern maintained when controlled for phylogeny?}
         \subsection{What pattern do out-of-frame stop codons follow?}
@@ -72,6 +107,7 @@
         \subsection{Does the patterns seen extend to Eukaryotes and Archaea?
                     As they utilise a single termination factor}
     \section{Discussion}
+
     \section{Conclusions}
 
 	\newpage \phantomsection

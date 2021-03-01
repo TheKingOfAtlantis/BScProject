@@ -1,3 +1,12 @@
+
+# QC
+
+# Check translation tables: Some only use table 4 - Plot what is going on
+# Check gene lengths are multiple of three
+
+# Plot genomes size vs no of genes
+# Should fit nicely to a straight line
+
 import itertools, pathlib
 from Bio import SeqIO
 from collections import Counter
@@ -20,12 +29,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
-    pathlib.Path("data/trans_table/").mkdir(parents=True, exist_ok=True)
-    pathlib.Path("plot/trans_table/").mkdir(parents=True, exist_ok=True)
+    pathlib.Path("data/qc/trans_table/").mkdir(parents=True, exist_ok=True)
+    pathlib.Path("plot/qc/trans_table/").mkdir(parents=True, exist_ok=True)
 
     archaea_tables = pd.DataFrame(dict(loadGlob("data/genomes/archaea/*", getTranslationTable))).T
-    archaea_tables.to_csv("data/trans_table/archaea.csv")
-    archaea_tables.count().plot(kind='bar', figsize=(19,6)).get_figure().savefig("plot/trans_table/archaea.png")
+    archaea_tables.to_csv("data/qc/trans_table/archaea.csv")
+    archaea_tables.count().plot(kind='bar', figsize=(19,6)).get_figure().savefig("plot/qc/trans_table/archaea.png")
     archaea_tables.plot(kind='bar', figsize=(19, 6))
 
     fig, ax = plt.subplots(1, len(archaea_tables.columns), sharey=True)
@@ -35,11 +44,11 @@ if __name__ == "__main__":
         if(len(archaea_tables.columns) == 1): ax.bar(values.index, values)
         else: ax[i].bar(values.index, values)
         ax.set_xticklabels([])
-    fig.savefig("plot/trans_table/archaea-distribution.png")
+    fig.savefig("plot/qc/trans_table/archaea-distribution.png")
 
     bacteria_tables = pd.DataFrame(dict(loadGlob("data/genomes/bacteria/*", getTranslationTable))).T
-    bacteria_tables.to_csv("data/trans_table/bacteria.csv")
-    bacteria_tables.count().plot(kind='bar', figsize=(19,6)).get_figure().savefig("plot/trans_table/bacteria.png")
+    bacteria_tables.to_csv("data/qc/trans_table/bacteria.csv")
+    bacteria_tables.count().plot(kind='bar', figsize=(19,6)).get_figure().savefig("plot/qc/trans_table/bacteria.png")
 
     # Plots the number of CDS which use each translation table
     fig, ax = plt.subplots(1, len(bacteria_tables.columns), sharey=True)
@@ -49,4 +58,4 @@ if __name__ == "__main__":
         if(len(bacteria_tables.columns) == 1): ax.bar(values.index, values)
         else: ax[i].bar(values.index, values)
         ax.set_xticklabels([])
-    fig.savefig("plot/trans_table/bacteria_distribution.png")
+    fig.savefig("plot/qc/trans_table/bacteria_distribution.png")

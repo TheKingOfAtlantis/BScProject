@@ -7,17 +7,10 @@
 from Bio import SeqIO
 from Bio.Data import CodonTable
 
+# Utility Function(s)
 
 def getCodonTable(feature):
     return CodonTable.generic_by_id[int(feature.qualifiers["transl_table"][0])]
-
-# TODO: Consider moving this into common - Would be useful in many other scripts
-def isStop(codon, feature):
-    '''
-        Given a codon checks if it is a stop codon
-    '''
-    codonTable = getCodonTable(feature)
-    return codon in codonTable.stop_codons
 
 # The checks to be done
 
@@ -43,15 +36,17 @@ def endCheck(seq, feature):
     '''
     featureSeq = feature.extract(seq)
     endCodon   = featureSeq[-3:]
-    return isStop(endCodon, feature)
+    codonTable = getCodonTable(feature)
+    return endCodon in codonTable.stop_codons
 def internalCheck(seq, feature):
     '''
         Checks the internal segment of the sequence to ensure that no stop codons are
         present within the sequence beyond the stop codon used to terminate it
     '''
     featureSeq = feature.extract(seq)
+    codonTable = getCodonTable(feature)
     for i in range(3, len(feature), 3):
-        if(isStop(featureSeq[i-3:i], feature)):
+        if(featureSeq[i-3:i] in codonTable.stop_codons):
             # If we encounter a stop then it must be internal
             return False
     return True
@@ -59,28 +54,24 @@ def internalCheck(seq, feature):
 def check(file):
     ''' Collects the results of all the checks '''
     record = next(SeqIO.parse(file, "embl"))
-    for feature in filter(lambda x: x.type in "CDS", record.features):
-        return (record.id, {
-            "length":   lengthCheck(feature),               # Result of checking length of sequence (If sequence multiple of three == True)
-            "start":    startCheck(record.seq, feature),    # Result of checking start is start codon (If start wtih start == True)
-            "end":      endCheck(record.seq, feature),      # Result of checking end is stop codon (If ends with stop == True)
-            "internal": internalCheck(record.seq, feature), # Result of checking for internal stop codons (If none found == True)
-        })
+    return (record.id, [{
+        "position": i, # Position in filtered features list (to find culprits)
+        "length":   lengthCheck(feature),               # Result of checking length of sequence (If sequence multiple of three == True)
+        "start":    startCheck(record.seq, feature),    # Result of checking start is start codon (If start wtih start == True)
+        "end":      endCheck(record.seq, feature),      # Result of checking end is stop codon (If ends with stop == True)
+        "internal": internalCheck(record.seq, feature), # Result of checking for internal stop codons (If none found == True)
+    } for i, feature in enumerate(filter(lambda x: x.type in "CDS", record.features))])
+
 
 if __name__ == "__main__":
     from common import loadGlob
     import pandas as pd
-    import itertools, pathlib
+    import itertools, pathlib, json
 
     pathlib.Path("data/qc/proteins/").mkdir(parents=True, exist_ok=True)
 
-    # Generate results
-    # Then check results for any which failed any 1 of the criteria
-
     result = dict(loadGlob("data/genomes/archaea/*", check))
-    result = pd.DataFrame(result).T
-    result.to_csv("data/qc/proteins/archaea.csv")
+    with open("data/qc/proteins/archaea.json", "w") as file: json.dump(result, file)
 
     result = dict(loadGlob("data/genomes/bacteria/*", check))
-    result = pd.DataFrame(result).T
-    result.to_csv("data/qc/proteins/bacteria.csv")
+    with open("data/qc/proteins/bacteria.json", "w") as file: json.dump(result, file)

@@ -5,17 +5,16 @@ if __name__ == "__main__":
     print("Do not directly call this file! Instead import it where you need it")
     exit(-1)
 
-def __loadParallel(callable, param, count, progress = True):
+def __loadParallel(callable, param, count, progress, sequential):
     import os
     import tqdm # Used to track progress
     from multiprocessing import Pool # Used to perform access in parallel fashion
 
     # Create a pool of process which are used to run operations on each file
-    with Pool(min( # Lets not use up more than we need
+    with Pool(1 if sequential else min( # Lets not use up more than we need
         os.cpu_count(),
         count
     )) as pool:
-
         # Check if we want to display the progress (using tqdm)
         if progress: result = list(tqdm.tqdm(
             pool.imap(callable, param),
@@ -52,7 +51,7 @@ def __loadZip(x):
         file = io.TextIOWrapper(zipFile.open(path)) # Get the file and since given as bytes => Convert to Text
         return __processFile(file, op, extra)       # Perform operation on file
 
-def loadZip(path, operation, progress = True, extra = None):
+def loadZip(path, operation, extra = None, progress = True, sequential = False):
 
     with ZipFile(path) as zipFile:
         count = len(zipFile.namelist())
@@ -65,7 +64,7 @@ def loadZip(path, operation, progress = True, extra = None):
             range(0, count),             # Then pass each file an index to the file itself
             itertools.repeat(operation), # Then pass the operation to be run to each process
             itertools.repeat(extra)      # Extra parameters to pass to operation
-        ), count
+        ), count, progress, sequential
     )
 
 def __loadGlob(x):
@@ -76,7 +75,7 @@ def __loadGlob(x):
     with open(path) as file: # Open zip file
         return __processFile(file, op, extra)
 
-def loadGlob(pattern, operation, progress = True, extra = None):
+def loadGlob(pattern, operation, extra = None, progress = True, sequential = False):
     import glob
 
     paths = glob.glob(pattern)
@@ -86,5 +85,5 @@ def loadGlob(pattern, operation, progress = True, extra = None):
             paths,                        # List of paths to process
             itertools.repeat(operation),  # Operation to be run in each process/file
             itertools.repeat(extra)       # Extra parameters to pass to operation
-        ), len(paths)
+        ), len(paths), progress, sequential
     )

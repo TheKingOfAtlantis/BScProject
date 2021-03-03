@@ -41,9 +41,12 @@ if __name__ == "__main__":
     for i, table in enumerate(archaea_tables.columns):
         print(table)
         values = archaea_tables[table].sort_values()
-        if(len(archaea_tables.columns) == 1): ax.bar(values.index, values)
-        else: ax[i].bar(values.index, values)
-        ax.set_xticklabels([])
+        if(len(archaea_tables.columns) == 1):
+            ax.bar(values.index, values)
+            ax.set_xticklabels([])
+        else:
+            ax[i].bar(values.index, values)
+            ax[i].set_xticklabels([])
     fig.savefig("plot/qc/trans_table/archaea-distribution.png")
 
     bacteria_tables = pd.DataFrame(dict(loadGlob("data/genomes/bacteria/*", getTranslationTable))).T
@@ -55,7 +58,10 @@ if __name__ == "__main__":
     for i, table in enumerate(bacteria_tables.columns):
         print(table)
         values = bacteria_tables[table].sort_values()
-        if(len(bacteria_tables.columns) == 1): ax.bar(values.index, values)
-        else: ax[i].bar(values.index, values)
-        ax.set_xticklabels([])
+        if(len(bacteria_tables.columns) == 1):
+            ax.bar(values.index, values)
+            ax.set_xticklabels([])
+        else:
+            ax[i].bar(values.index, values)
+            ax[i].set_xticklabels([])
     fig.savefig("plot/qc/trans_table/bacteria_distribution.png")

@@ -6,11 +6,14 @@ from scipy.spatial import distance
 import pandas as pd
 import numpy as np
 
+def removePseudo(features):
+    return list(filter(lambda x: not "pseudo" in x.qualifiers, features))
+
 def calculate(file):
     record = next(SeqIO.parse(file, "embl"))
     return pd.DataFrame({
         "size": len(record.seq),
-        "count": len([x for x in record.features if x.type == "gene"])
+        "count": len(removePseudo([x for x in record.features if x.type == "CDS"]))
     }, index=[record.id])
 
 from common import loadGlob
@@ -24,10 +27,7 @@ if __name__ == "__main__":
     bacteria = pd.concat(loadGlob("data/genomes/bacteria/*", calculate))
     bacteria.to_csv("data/qc/count/bacteria.csv")
 
-    # Use Mahalanobis Distance to find those that deviate significantly from the mean (3 sd)
-    # Mahalanobis Distance generatlisation of Z-score (measure of the distance from mean)
-
-    print("Running the R script via subprocess.call(...)")
-
-    import subprocess
-    subprocess.call("Rscript scripts/QC-GenomeVsGenes.R")
+    import os, subprocess
+    subprocess.call("Rscript --vanilla --slave scripts/QC-GenomeVsGenes.R", shell=True)
+    if(os.path.exists("Rplots.pdf")):
+        os.remove("Rplots.pdf")

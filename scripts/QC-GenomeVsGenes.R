@@ -3,7 +3,7 @@
 # Mahalanobis Distance generatlisation of Z-score (measure of the distance from mean)
 
 # Pulled this from: https://stackoverflow.com/a/39051803/3856359
-requiredPackages = c('tidyverse','ggplot2','ggrepel', 'magrittr')
+requiredPackages = c('dplyr','ggplot2','ggrepel', 'magrittr')
 for(p in requiredPackages){
   if(!require(p,character.only = TRUE)) install.packages(p)
   library(p,character.only = TRUE)

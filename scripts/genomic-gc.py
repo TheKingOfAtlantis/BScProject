@@ -5,8 +5,10 @@ def CalculateGC(file):
     record = next(SeqIO.parse(file, "embl"))
     return (record.id, SeqUtils.GC(record.seq))
 
-import json
+import json, pathlib
 if __name__ == "__main__":
+    pathlib.Path(f"data/gc/").mkdir(parents=True, exist_ok=True)
+
     archaea_gc = loadGlob("data/genomes/archaea/*", CalculateGC)
     with open("data/gc/archaea.json", "w") as js: json.dump(archaea_gc, js)
     del archaea_gc

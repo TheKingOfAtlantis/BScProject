@@ -1,4 +1,4 @@
-import os, json, itertools
+import os, json, itertools, pathlib
 import pandas as pd
 import numpy as np
 
@@ -48,7 +48,7 @@ def calculateFreq(df):
     freq["freq"] = freq["freq"].divide(freq["freq"].groupby("shift", axis=1).sum(), axis=0)
     return freq.reorder_levels((2, 1, 0), axis=1).sort_index(axis=1) # Swap around order of columns
 
-def plotGCvsFreq(name, freq, gc3 = True, pdf = False):
+def plotGCvsFreq(name, freq, group, gc3 = True, pdf = False):
     # GC3 parameter tells us if we are using GC or GC3 in plots
     # Default: Use GC3
     if(gc3): gcUsed = "gc3"
@@ -87,16 +87,18 @@ def plotGCvsFreq(name, freq, gc3 = True, pdf = False):
         ax.set_xlabel("{} Content (%)".format(gcUsed.upper()))
         ax.set_ylabel("Stop Codon Frequency (%)")
 
-        fig.savefig(f"plot/gc/cds/{name}-stop-{gcUsed}-shift{shift}.png")
-        if(pdf): fig.savefig(f"plot/gc/cds/{name}-stop-{gcUsed}-shift{shift}.pdf")
+        pathlib.Path(f"plot/gc/{group}").mkdir(parents=True, exist_ok=True)
+        fig.savefig(f"plot/gc/{group}/{name}-stop-{gcUsed}-shift{shift}.png")
+        if(pdf): fig.savefig(f"plot/gc/{group}/{name}-stop-{gcUsed}-shift{shift}.pdf")
 
 
 from common import loadGlob
 
-def load(file):
+def load(file, group):
     name = os.path.basename(file.name).split(".")[0]
     freq = calculateFreq(loadDataFrame(file))
-    plotGCvsFreq(name, freq)
+    plotGCvsFreq(name, freq, group)
 
 if __name__ in "__main__":
-    loadGlob("data/gc/cds/*.json", load)
+    loadGlob("data/gc/cds/*.json", load, extra="cds")
+    loadGlob("data/gc/trna/*.json", load, extra="trna")

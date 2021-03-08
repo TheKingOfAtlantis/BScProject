@@ -1,8 +1,7 @@
 #!/bin/sh
 
 # Make the output directories if they do not exist
-mkdir -p data/gc/cds data/gc/ncRNA data/genomes
-mkdir -p plot/gc/cds
+mkdir -p data/genomes
 
 # Check if we have unzipped the genomes
 if [ ! -d "./data/genomes/archaea" ]; then

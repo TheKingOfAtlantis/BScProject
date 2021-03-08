@@ -40,6 +40,9 @@
 \usepackage[style=authoryear-ibid]{biblatex}
 \usepackage{todonotes}
 
+\let\mc\multicolumn
+\let\mr\multirow
+
 % \maxdeadcycles=1000
 
 \DeclareSIUnit\G{G}
@@ -89,6 +92,30 @@
     \section{Methods}
         The bacterial and archaeal datasets used were previously created by Laurence Hurst - these dataset was created by filtering out all but the largest genome of each genus to ensure that only one representative genome was left per genus.
 
+        To ensure that the protein coding genes which are used for the analysis are indeed protein coding genes they were checked against a couple basic criteria. This was run on features marked as CDS (Coding Sequence), in part as these should mostly be expected to pass. First, the beginning codon and end codon were checked against the translation table associated with each gene, this was to ensure they were valid start and stop codons respectively. Then to ensure that genes spanned a proper reading frames the length of protein coding genes was check for divisibility by 3. Finally, internal stop codons were checked for as these would indicate the gene was likely non-functional and thus not likely to be under the same influences.
+
+        \begin{table}[H]
+            \centering
+            \caption{Number of CDS annotated features which failed in each category}
+            \begin{tabular}{ r S S S S }
+                \toprule
+                              & \mc{2}{c}{Orignal}     & \mc{2}{c}{Without pseudogenes} \\
+                                \cmidrule(rl){2-3}       \cmidrule(rl){4-5}
+                Category      & {Bacteria} & {Archaea} & {Bacteria} & {Archaea} \\
+                \midrule
+                Start         & 0          & 0         & 0          & 0        \\
+                Stop          & 0          & 0         & 0          & 0        \\
+                Internal Stop & 0          & 0         & 0          & 0        \\
+                Length        & 0          & 0         & 0          & 0        \\
+                \bottomrule
+            \end{tabular}
+        \end{table}
+
+        Account for pseudogenes, by removing them from the list, was followed by a substantial reducing in the number of CDS features which failed the check
+
+        By accounting for pseudogenes (any of the features with the "pseudo" annotation) and removing them from the list of genes which failed, a large drop was seen showing that they account for the vast majority of these genes, accounting for \SI{0}{\percent} of all failures. A record of these features was kept to remove them from any further analysis.
+
+        All the scripts used can be seen on \href{https://github.com/TheKingOfAtlantis/BScProject}{Github}
     \section{Results}
         \subsection{Is pattern maintained when controlled for phylogeny?}
         \subsection{What pattern do out-of-frame stop codons follow?}

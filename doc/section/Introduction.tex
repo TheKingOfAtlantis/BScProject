@@ -1,0 +1,22 @@
+% !TeX root = ../main.tex
+\documentclass[../main.tex]{subfile}
+\begin{document} \section{Introduction}
+    The termination of mRNA translation into proteins is classically controlled by a set of three stop codons: UAA, UAG, and UGA. Recognition of these codons triggers a choreographed sequence of events which result in the dismantling of the ribosome releasing the synthesised nascent peptide chain and the mRNA. Critical to this release process are release factors proteins - these proteins mimic the structure and function of tRNA \autocite{Nakamura2003}, recognising \& binding to the stop sequence and triggering the dismantling process.
+
+    In bacteria, three release factors (RF) are present of which RF1 (which recognises UAA and UAG) as well as RF2 (which recognises UAA and UGA) perform the recognition, with RF3 acting to release RF1/2 from the ribosome. Eukaryotes and Archaea, contain a single release factor which recognises the stop codons, called eRF1 and aRF1 respectively, these proteins share a various features \autocite{Alkalaeva2009}, so much so that aRF1 is able to replace the function of eRF1 \autocite{Dontsova2000}, both release factors are capable of recognising all three termination codons, unlike their bacterial counterparts.
+
+    \begin{wrapfigure}{r}{7.5cm}
+        \centering
+        \includegraphics[
+            clip, trim={0 5.5cm 0 0}
+        ]{../plot/references/usage-vs-gc.jpg}
+        \caption{Distribution of stop codon usage against GC of bacteria from \mancite\cite{Korkmaz2014}}
+        \label{fig:intro/codon-gc}
+    \end{wrapfigure}
+
+    The usage of these stop codons is under various pressures, including reducing readthrough rates, stopping out-of-frame reading and GC pressure on the genome. It has been observed that as the GC content of a bacterial genomes increases, the prevalence of UAA stop codons decreases while UGA increases, these codons follow what would be expected given their different GC content. Meanwhile, UAG breaks this trend, with its usage remaining low (20\%) and independent of the GC content of the genome, countering what otherwise be expected especially given how the other codons follow the pattern, \cref{fig:intro/codon-gc}. One theory postulates that usage of UGA and UAG co-evolved with the relative expression of RF1 and RF2, \mancite\autocite{Korkmaz2014}, (henceforth, referred to as the RF1:RF2 hypothesis). Whether, the RF1:RF2 hypothesis properly explains is unresolved. Recently the same trends have been seen in downstream addition stop codons, \autocite{Ho2019}, in bacteria. This might possibly reflect selection for termination if these are either fail-safe stop codons to trap ribosomes that have read through the primary stop. Similarly, of frame stop codons may function to catch frameshifted ribosomes.
+
+    One could postulate that effects seen downstream may still be within the purview of RF1/2 through some other mechanism. As such, to properly isolate the influence of these proteins and to properly identify whether RF1:RF2 hypothesis holds true or if another mechanism is underlying the patterns seen, this project aims to investigating the usage of the stop codons in Eukaryotes and Archaea, given that they utilise a single release factor for the recognition of all termination codons, at the terminus of protein coding sequences, as well as downstream additional codons. Additionally usage of UAG and UGA in non-coding RNA (such as tRNA and rRNA) will be investigated, as it would be expected that any usage of the stop codons should only be correlated with GC, if the RF1:RF2 hypothesis is correct, as these do not participate in translation.
+
+
+\end{document}

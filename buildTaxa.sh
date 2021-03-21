@@ -1,4 +1,4 @@
 cd data
-taxadb download -t full -o taxadb
-taxadb create -i taxadb --dbname taxadb.sqlite
+taxadb download -t taxa -o taxadb
+taxadb create -d taxa -i taxadb -n taxadb.sqlite
 rm -r taxadb

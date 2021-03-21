@@ -1,15 +1,47 @@
 import itertools
 from zipfile import ZipFile # Used to access the zipfile
+import os
+import tqdm # Used to track progress
+from multiprocessing import Pool # Used to perform access in parallel fashion
 
 if __name__ == "__main__":
     print("Do not directly call this file! Instead import it where you need it")
     exit(-1)
 
-def __loadParallel(callable, param, count, progress, sequential):
-    import os
-    import tqdm # Used to track progress
-    from multiprocessing import Pool # Used to perform access in parallel fashion
+def __concatPreprocessor(x):
+    import pandas as pd
+    data, preprocessor = x
+    return pd.concat(preprocessor(data))
 
+def concat(data, preprocessor = None):
+    '''
+        data - Iterable with the data to be concat into a DataFrame
+        preprocessor - Initial concat function: Allows for concat with non-DataFrame data
+                  before working with list of dataframes
+    '''
+
+    import more_itertools
+    import pandas as pd
+
+    with Pool(os.cpu_count()) as pool:
+
+        if(preprocessor != None):
+            data = pool.map(
+                __concatPreprocessor, zip(
+                    more_itertools.chunked(data, 50),
+                    itertools.repeat(preprocessor)
+                )
+            )
+
+        while(len(data) > 1):
+            data = pool.map(
+                pd.concat,
+                more_itertools.chunked(data, 50)
+            )
+
+        return data[0]
+
+def __loadParallel(callable, param, count, progress, sequential):
     # Create a pool of process which are used to run operations on each file
     with Pool(1 if sequential else min( # Lets not use up more than we need
         os.cpu_count(),

@@ -7,26 +7,21 @@ from scipy import stats
 import matplotlib.pyplot as plt
 
 def loadDataFrame(file):
-    gc = json.load(file)
+    df = pd.read_json(file, orient="table")
 
-    # Loading the dict as it is to a DataFrame will produce a DataFrame
-    # whose columns are the IDs and values are dicts
-    # So first we go through each dict and produce a DataFrame from its
-    # values, which gives us a Dict[str:DataFrame] type => Instead of calling
-    # pd.DataFrame (which would set IDs as columns still), we use concat to
-    # join all the DataFrames using the ID as an index
-    df = pd.concat({k:pd.DataFrame(v) for k,v in gc.items()})
-
-    # Then we need to seperate the GC values which are read in as a tuple
-    # By converting the GC column to a list and passing that in as a DataFrame
-    # we can quickly separate the values
     df[["gc", "gc1", "gc2", "gc3"]] = pd.DataFrame(df.gc.tolist(), index=df.index)
-    df = df[["shift", "stop", "gc", "gc3"]] # Select from the columns we care about
+    df = df[["shift", "stop", "gc", "gc3"]]
 
-    # Return a DataFrame
-    # For ease of use (when we call pivot) we convert the indices to columns
-    # Dropping level_1 as these are the unique integer index values given which
-    # have no reason to keep reference to
+    # We want to sort and bin the human genome
+    if(pathlib.Path(file.name).stem == "human"):
+        # Sort and bin
+        df = df.sort_values(by=["gc3"])
+        df = pd.concat(
+            np.array_split(df, 100),
+            keys=[f"Human-${x}" for x in range(100)]
+        )
+
+
     return df.reset_index().rename(columns={"level_0": "id"}).drop("level_1", axis=1)
 
 def calculateFreq(df):

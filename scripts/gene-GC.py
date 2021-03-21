@@ -4,7 +4,9 @@ from zipfile import ZipFile
 from Bio import SeqIO, SeqUtils
 from Bio.SeqFeature import FeatureLocation
 
-from common import loadGlob
+from common import loadGlob, concat
+
+import pandas as pd
 
 def LoadRecord(file, toFind = "CDS"):
     record = next(SeqIO.parse(file, "embl")) # Load the record from the file
@@ -27,7 +29,8 @@ def LoadRecord(file, toFind = "CDS"):
                 })
     return (record.id, data) # Pair the data with the record ID
 
-import json
+def concatPreprocess(data): return { k:pd.DataFrame(v) for k,v in data }
+
 import pathlib
 if __name__ == "__main__":
 
@@ -37,12 +40,9 @@ if __name__ == "__main__":
         # Make sure we have the path to export to (including parents)
         pathlib.Path(f"data/gc/{geneType.lower()}").mkdir(parents=True, exist_ok=True)
 
-        print(f"Archaea {geneType}:")
-        archaea_gene_gc = dict(loadGlob("data/genomes/archaea/*", LoadRecord, extra=toFind))
-        with open(f"data/gc/{geneType.lower()}/archaea.json", 'w') as file: json.dump(archaea_gene_gc, file)
-        del archaea_gene_gc
+        print(f"{geneType}:")
+        archaea_gene_gc = loadGlob("data/genomes/archaea/*", LoadRecord, extra=toFind)
+        concat(archaea_gene_gc, concatPreprocess).to_json(f"data/gc/{geneType.lower()}/archaea.json", orient="table")
 
-        print(f"Bacteria {geneType}:")
-        bacteria_gene_gc = dict(loadGlob("data/genomes/bacteria/*", LoadRecord, extra=toFind))
-        with open(f"data/gc/{geneType.lower()}/bacteria.json", 'w') as file: json.dump(bacteria_gene_gc, file)
-        del bacteria_gene_gc
+        bacteria_gene_gc = loadGlob("data/genomes/bacteria/*", LoadRecord, extra=toFind)
+        concat(bacteria_gene_gc, concatPreprocess).to_json(f"data/gc/{geneType.lower()}/bacteria.json", orient="table")

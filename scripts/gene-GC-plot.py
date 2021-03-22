@@ -36,25 +36,20 @@ def calculateFreq(df):
     #  - Average GC of each sequence in each frame
     #  - Average GC3 of each sequence in each frame
     freq = pd.pivot_table(
-        df, values=["freq", "gc", "gc3"], index="id", columns=["stop", "shift"],
-        aggfunc={"freq": np.sum, "gc": np.mean, "gc3": np.mean }
+        df, values=["freq","gc3"], index="id", columns=["stop", "shift"],
+        aggfunc={"freq": np.sum, "gc3": np.mean }
     )
     # Normalise the frequence by dividing by the number of codons in each frame found in each genome
     freq["freq"] = freq["freq"].divide(freq["freq"].groupby("shift", axis=1).sum(), axis=0)
     return freq.reorder_levels((2, 1, 0), axis=1).sort_index(axis=1) # Swap around order of columns
 
-def plotGCvsFreq(name, freq, group, gc3 = True, pdf = False):
-    # GC3 parameter tells us if we are using GC or GC3 in plots
-    # Default: Use GC3
-    if(gc3): gcUsed = "gc3"
-    else: gcUsed = "gc"
-
+def plotGCvsFreq(name, freq, group, pdf = False):
     # Create new plot for each frameshift
     for shift in freq.columns.get_level_values("shift").unique():
         fig, ax = plt.subplots(figsize=(16,9))
         for codon in freq[shift].columns.get_level_values("stop").unique():
             # Get the frequence and GC(3)
-            xData = freq[shift][codon][gcUsed].dropna()
+            xData = freq[shift][codon]["gc3"].dropna()
             yData = freq[shift][codon]["freq"].dropna() * 100
 
             # Use this so we can give both line and scatter points the same colour
@@ -79,12 +74,12 @@ def plotGCvsFreq(name, freq, group, gc3 = True, pdf = False):
         ax.spines['right'].set_visible(False)
         ax.spines['top'].set_visible(False)
 
-        ax.set_xlabel("{} Content (%)".format(gcUsed.upper()))
+        ax.set_xlabel("GC3 Content (%)")
         ax.set_ylabel("Stop Codon Frequency (%)")
 
         pathlib.Path(f"plot/gc/{group}").mkdir(parents=True, exist_ok=True)
-        fig.savefig(f"plot/gc/{group}/{name}-stop-{gcUsed}-shift{shift}.png")
-        if(pdf): fig.savefig(f"plot/gc/{group}/{name}-stop-{gcUsed}-shift{shift}.pdf")
+        fig.savefig(f"plot/gc/{group}/{name}-stop-shift{int(shift)}.png")
+        if(pdf): fig.savefig(f"plot/gc/{group}/{name}-stop-shift{int(shift)}.pdf")
 
 
 from common import loadGlob

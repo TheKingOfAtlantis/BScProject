@@ -19,3 +19,8 @@ python scripts/qc/Protein-Isolate.py     # Produce list of non-conforming CDSs (
 python scripts/qc/GenomeVSGenes.py       # Plots no. of genes vs genome size
 python scripts/qc/TranslationTable.py    # Identify translation table usage
 
+python scripts/analysis/genomicGC.py             # Process files to generate GC of genomes
+python scripts/analysis/stopUsageProkarytoes.py  # Process files to generate GC3 & Stop usage data
+python scripts/analysis/stopUsageHuman.py        # Process human CDSs for GC3 & Stop usage
+python scripts/analysis/stopUsagePlot.py         # Produce the plots for GC3 & stop usage
+python scripts/analysis/stopUsagePlotLogistic.py # Logistic regression on human data

@@ -82,6 +82,8 @@ def plotGCvsFreq(name, freq, group, pdf = False):
         if(pdf): fig.savefig(f"plot/gc/{group}/{name}-stop-shift{int(shift)}.pdf")
 
 
+import sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
 from common import loadGlob
 
 def load(file, group):

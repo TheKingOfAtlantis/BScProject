@@ -23,6 +23,8 @@ def LoadRecord(feature, toFind = "CDS"):
 gc = []
 data = list(SeqIO.parse("data/genomes/human.fna", "fasta"))
 
+import sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
 import common, os
 
 from multiprocessing import Pool

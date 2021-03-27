@@ -1,3 +1,5 @@
+import sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
 from common import loadGlob
 from Bio import SeqIO, SeqUtils
 

@@ -1,6 +1,8 @@
 from Bio import SeqIO, SeqUtils
 from Bio.SeqFeature import FeatureLocation
 
+import sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
 from common import loadGlob, concat, getID
 
 import pandas as pd

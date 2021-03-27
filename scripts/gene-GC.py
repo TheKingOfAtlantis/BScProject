@@ -1,12 +1,15 @@
-import os
-from zipfile import ZipFile
-
 from Bio import SeqIO, SeqUtils
 from Bio.SeqFeature import FeatureLocation
 
-from common import loadGlob, concat
+from common import loadGlob, concat, getID
 
 import pandas as pd
+
+invalidCDS = pd.read_csv("data/qc/proteins/failed.csv").drop(columns=["Unnamed: 0", "index"])
+def isInvalidFeature(genome, feature):
+    rows = invalidCDS[invalidCDS["genome"] == genome]
+    rows = rows[rows["id"] == getID(feature)]
+    return rows.empty
 
 def LoadRecord(file, toFind = "CDS"):
     record = next(SeqIO.parse(file, "embl")) # Load the record from the file
@@ -14,6 +17,12 @@ def LoadRecord(file, toFind = "CDS"):
 
     # Filtering out the features which != CDS and iterate over remainder
     for feature in filter(lambda x: x.type in toFind, record.features):
+
+        # Check feature against the list of invalid features
+        # Found from QCing
+        if(isInvalidFeature(record.id, feature)):
+            continue # Skip this feature
+
         # We want to explore value across frameshifts
         # So shift the frame over 2 codons worth of nucleotides
         for shift in range(0, 6): # Check across 2 codons

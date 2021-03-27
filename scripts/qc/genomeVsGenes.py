@@ -13,6 +13,8 @@ def calculate(file):
         "count": len([x for x in record.features if x.type == "gene"])
     }, index=[record.id])
 
+import sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
 from common import loadGlob
 if __name__ == "__main__":
     pathlib.Path("data/qc/count/").mkdir(parents=True, exist_ok=True)

@@ -76,9 +76,12 @@ def check(file):
 
 
 if __name__ == "__main__":
-    from common import loadGlob
     import pandas as pd
     import itertools, pathlib, json
+
+    import sys
+    sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
+    from common import loadGlob
 
     pathlib.Path("data/qc/proteins/").mkdir(parents=True, exist_ok=True)
 

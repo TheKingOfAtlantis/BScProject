@@ -13,6 +13,9 @@ if [ ! -d "./data/genomes/bacteria" ]; then
     mv ./data/filtered_genomes/ ./data/genomes/bacteria
 fi
 
-python scripts/genomic-GC.py   # Process files to generate GC
-python scripts/gene-GC.py      # Process files to generate GC of CDS
-python scripts/gene-GC-plot.py # Produce the plots for cds
+python scripts/qc/avaliableIDs.py        # Identifies the minimal identifier set
+python scripts/qc/Protein.py             # Analysis genomes for non-conforming CDSs
+python scripts/qc/Protein-Isolate.py     # Produce list of non-conforming CDSs (Psuedogene check)
+python scripts/qc/GenomeVSGenes.py       # Plots no. of genes vs genome size
+python scripts/qc/TranslationTable.py    # Identify translation table usage
+

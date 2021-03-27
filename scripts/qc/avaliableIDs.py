@@ -46,6 +46,8 @@ def shrinkGenomeIds(file, toFind):
         else: ids.append(res)
     return ids
 
+import sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
 from common import loadGlob
 if __name__ == "__main__":
     idTypes = loadGlob("data/genomes/*/*.embl", shrinkGenomeIds, extra=["CDS", "tRNA"])

@@ -11,6 +11,9 @@ import itertools, pathlib
 from Bio import SeqIO
 from collections import Counter
 
+import sys
+sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
+
 def getTranslationTable(file):
     record = next(SeqIO.parse(file, "embl"))
 

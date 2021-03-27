@@ -21,7 +21,7 @@ bacteria = getData("bacteria")
 
 pd.concat({
     "bacteria": bacteria,
-    "arachaea": archaea
+    "archaea": archaea
 }).to_csv("data/qc/proteins/failed.csv")
 
 def __findPseudo(x):

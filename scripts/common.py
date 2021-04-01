@@ -1,8 +1,9 @@
-import itertools
+import itertools, more_itertools
 from zipfile import ZipFile # Used to access the zipfile
 import os
 import tqdm # Used to track progress
 from multiprocessing import Pool # Used to perform access in parallel fashion
+import pandas as pd
 
 if __name__ == "__main__":
     print("Do not directly call this file! Instead import it where you need it")
@@ -18,34 +19,36 @@ def getID(record):
     return record.qualifiers[idtype][0]
 
 def __concatPreprocessor(x):
-    import pandas as pd
-    data, preprocessor = x
-    return pd.concat(preprocessor(data))
+    data, preprocessor, axis = x
+    return pd.concat(preprocessor(data), axis = axis)
 
-def concat(data, preprocessor = None):
+def __concat(x):
+    data, axis = x
+    return pd.concat(data, axis = axis)
+
+def concat(data, preprocessor = None, axis = 0):
     '''
         data - Iterable with the data to be concat into a DataFrame
         preprocessor - Initial concat function: Allows for concat with non-DataFrame data
                   before working with list of dataframes
     '''
-
-    import more_itertools
-    import pandas as pd
-
     with Pool(os.cpu_count()) as pool:
 
         if(preprocessor != None):
             data = pool.map(
                 __concatPreprocessor, zip(
                     more_itertools.chunked(data, 50),
-                    itertools.repeat(preprocessor)
+                    itertools.repeat(preprocessor),
+                    itertools.repeat(axis)
                 )
             )
 
         while(len(data) > 1):
             data = pool.map(
-                pd.concat,
-                more_itertools.chunked(data, 50)
+                __concat, zip(
+                    more_itertools.chunked(data, 50),
+                    itertools.repeat(axis)
+                )
             )
 
         return data[0]

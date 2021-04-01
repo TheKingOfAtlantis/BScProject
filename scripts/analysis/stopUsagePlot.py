@@ -2,7 +2,7 @@ import os, json, itertools, pathlib
 import pandas as pd
 import numpy as np
 
-from scipy import stats
+import statsmodels.api as sm
 
 import matplotlib.pyplot as plt
 
@@ -25,7 +25,7 @@ def loadDataFrame(file):
     return df.reset_index().rename(columns={"level_0": "id"}).drop("level_1", axis=1)
 
 def calculateFreq(df):
-    freq = df
+    freq = df.copy()
     freq["freq"] = 1 # As of right now we can see the frequence of each is 1 (as this is true)
 
     # We then use pivot to perform the bulk of the magic
@@ -36,7 +36,7 @@ def calculateFreq(df):
     #  - Average GC of each sequence in each frame
     #  - Average GC3 of each sequence in each frame
     freq = pd.pivot_table(
-        df, values=["freq","gc3"], index="id", columns=["stop", "shift"],
+        freq, values=["freq","gc3"], index="id", columns=["stop", "shift"],
         aggfunc={"freq": np.sum, "gc3": np.mean }
     )
     # Normalise the frequence by dividing by the number of codons in each frame found in each genome
@@ -49,26 +49,22 @@ def plotGCvsFreq(name, freq, group, pdf = False):
         fig, ax = plt.subplots(figsize=(16,9))
         for codon in freq[shift].columns.get_level_values("stop").unique():
             # Get the frequence and GC(3)
-            xData = freq[shift][codon]["gc3"].dropna()
-            yData = freq[shift][codon]["freq"].dropna() * 100
+            data = pd.DataFrame({
+                "x": freq[shift][codon]["gc3"],
+                "y": freq[shift][codon]["freq"] * 100
+            })
+
+            data.dropna(inplace = True)
 
             # Use this so we can give both line and scatter points the same colour
             colour = next(ax._get_lines.prop_cycler)['color']
 
             # Plot the raw data values
-            ax.scatter(xData, yData, label=codon, color=colour)
+            ax.scatter(data.x, data.y, label=codon, color=colour)
 
-            linreg = stats.linregress(xData, yData)   # Calculate linear regression/best fit on the data
-            x = np.linspace(xData.min(), xData.max()) # Produces set of x values within range of data
-            # Plot best fit line
-            ax.plot(x, x * linreg.slope + linreg.intercept, color=colour)
-            # Annotate line with stats
-            ax.annotate(
-                f"$y = {linreg.slope:.2g}x + {linreg.intercept:.2g}$\n"               # y = mx + c
-                f"$r^2=${linreg.rvalue:.2g}, $p$-value={linreg.pvalue:.2g}\n"         # r-squared & p-value
-                f"Error: $m=${linreg.stderr:.2g}, $c=${linreg.intercept_stderr:.2g}", # Error values for m & c
-                xy=(xData.max(), xData.max() * linreg.slope + linreg.intercept)
-            )
+            fit = sm.OLS(data.y, sm.add_constant(data.x)).fit()
+            ax.plot(data.x, fit.predict(sm.add_constant(data.x)), color=colour)
+
         ax.legend()
 
         ax.spines['right'].set_visible(False)
@@ -76,6 +72,8 @@ def plotGCvsFreq(name, freq, group, pdf = False):
 
         ax.set_xlabel("GC3 Content (%)")
         ax.set_ylabel("Stop Codon Frequency (%)")
+
+        ax.set_ylim((-5, 105))
 
         pathlib.Path(f"plot/gc/{group}").mkdir(parents=True, exist_ok=True)
         fig.savefig(f"plot/gc/{group}/{name}-stop-shift{int(shift)}.png")
@@ -87,9 +85,13 @@ sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
 from common import loadGlob
 
 def load(file, group):
-    name = os.path.basename(file.name).split(".")[0]
-    freq = calculateFreq(loadDataFrame(file))
-    plotGCvsFreq(name, freq, group)
+    name  = os.path.basename(file.name).split(".")[0]
+    df    = loadDataFrame(file)
+    noTAG = df[df["stop"] != "TAG"].copy() # Drop TAG => TAA, TGA & TAC
+    noTAC = df[df["stop"] != "TAC"].copy() # Drop TAG => TAA, TGA & TAG
+
+    plotGCvsFreq(name, calculateFreq(noTAG), group + "+TAC")
+    plotGCvsFreq(name, calculateFreq(noTAC), group + "+TAG")
 
 if __name__ in "__main__":
     loadGlob("data/gc/cds/*.json", load, extra="cds")

@@ -22,8 +22,10 @@ def LoadRecord(file, toFind = "CDS"):
 
         # Check feature against the list of invalid features
         # Found from QCing
-        if(isInvalidFeature(record.id, feature)):
-            continue # Skip this feature
+        # FIXME: I seem to be causing issues with the results just being random noise effectively
+        # if(feature.type == "CDS"):
+        #     if(isInvalidFeature(record.id, feature)):
+        #         continue # Skip this feature
 
         # We want to explore value across frameshifts
         # So shift the frame over 2 codons worth of nucleotides
@@ -32,7 +34,7 @@ def LoadRecord(file, toFind = "CDS"):
             seq = loc.extract(record.seq)    # Extract the DNA sequence using the location
 
             # Need to ensure we have a stop codon, otherwise we don't care
-            if seq[-3:] in ["TAA", "TGA", "TAG"]:
+            if seq[-3:] in ["TAA", "TGA", "TAG", "TAC"]:
                 data.append({                  # Record the following:
                     "shift": shift,            # Shift we applied to find codon
                     "gc": SeqUtils.GC123(seq), # GC (incl. GC123) of sequence (given the shift)

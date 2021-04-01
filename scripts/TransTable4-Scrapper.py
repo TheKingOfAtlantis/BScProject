@@ -23,17 +23,27 @@ ids = pd.read_csv(io.StringIO(ids.content.decode("utf-8")), sep="\t")
 
 taxaDB = TaxID(dbtype='sqlite', dbname='data/taxadb.sqlite')
 
-def filterBacteria(taxid):
-    if(taxaDB.has_parent(taxid, 2)): # Bacteria => Taxonomy ID: 2
+def filterSuperkingdom(x):
+    taxid, name = x
+    return __filterSuperkingdom(taxid, name)
+def __filterSuperkingdom(taxid, name):
+    superkingdom = {
+        "bacteria": 2,
+        "archaea": 2157,
+        "eukaryota": 2759
+    }
+    if(taxaDB.has_parent(taxid, superkingdom[name])):
         return taxid
 
 from multiprocessing import Pool
+import itertools
 if __name__ == "__main__":
     with Pool(os.cpu_count()) as pool:
         taxaIds = pd.unique(ids["tax_id"])
         bacteria_taxa = list(tqdm.tqdm(pool.imap(
-            filterBacteria,
-            taxaIds
-        ), total = len(taxaIds)))
+            filterSuperkingdom, zip(
+            taxaIds,
+            itertools.repeat("bacteria")
+        )), total = len(taxaIds)))
 bacteria_taxa = list(filter(lambda x: x != None, bacteria_taxa))
 bacteria_ids = ids[ids["tax_id"].isin(bacteria_taxa)]

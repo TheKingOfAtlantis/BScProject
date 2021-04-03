@@ -20,11 +20,13 @@ from taxadb.taxid import TaxID
 # Specifically we ask for:
 ids_url = (
     'https://www.ebi.ac.uk/ena/portal/api/search?'
-    'query=genome_representation="full"'  # We want the whole genome not just subdivisions of the genome (e.g. chromosomes)
-    '&limit=0'                            # We want every ID we can get a hold of (default: 100000)
-    '&result=assembly'                    # We want to seach against genome assemblies
-    '&fields=accession,tax_id,base_count' # We want to have: accession id, NCBI taxanomic id and base count
-    '&format=tsv'                         # Gives our data back as a tsv
+    'result=sequence'                          # We want to accession IDs for sequences (not the assemblies)
+    '&limit=0'                                 # We want every ID we can get a hold of (default: 100000)
+    '&query='
+        f'tax_tree({superkingdom[name]}) AND ' # We want to retrieve accession numbers for specific superkingdom(s)
+        'mol_type="genomic DNA"'               # Ensure that we are retrieving genomic DNA
+    '&fields=accession,tax_id,base_count'      # We want to have: accession id, NCBI taxanomic id and base count
+    '&format=tsv'                              # Gives our data back as a tsv
 )
 
 # Make a GET request to retrieve the data before converting to a DataFrame

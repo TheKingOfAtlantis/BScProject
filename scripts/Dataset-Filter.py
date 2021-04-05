@@ -23,14 +23,14 @@ def lineageConcat(block):
 
 def process(superkingdom):
     print(superkingdom)
-    ena_result = pd.read_csv(f"data/genomes/{superkingdom}-ids.tsv", delimiter='\t')
+    result = pd.read_csv(f"data/genomes/build/{superkingdom}-result.csv")
     with Pool(os.cpu_count()) as pool:
         # Some taxa ids referred to by multiple accession no.
         # So we filter our list to a unique set of taxa IDs
 
         # Now we need to group by genus and select just one species to use
         # First lets get the lineage of each bacteria taxa ID
-        taxa_result = pd.DataFrame({ "tax_id": pd.unique(ena_result.tax_id) })
+        taxa_result = pd.DataFrame({ "tax_id": pd.unique(result.tax_id) })
         taxa_result["lineage"] = list(tqdm(pool.imap(
             getLineage,
             taxa_result.tax_id
@@ -51,7 +51,7 @@ def process(superkingdom):
     # Finally we merge our list of lineages with the original ids list
     # This takes the intersection of both tables so will will only keep rows where we have entries in both
     ids = pd.merge(
-        ena_result, taxa[taxa.genus.isnull() == False],
+        result, taxa[taxa.genus.isnull() == False],
         on       = "tax_id",
         validate = "m:1" # Ensure its a many-to-one relation
     )
@@ -64,11 +64,10 @@ def process(superkingdom):
 
     # As a reference lets keep a list of the accession no. of each bacteria
     taxaDB = getDB()
-    out = largest.loc[,["accession", "tax_id", "base_count", "genus"]]
+    out = largest.loc[:,["uid", "accession", "tax_id", "base_count", "genus"]]
     out["sci_name"] = out["tax_id"].apply(taxaDB.sci_name)
 
-    pathlib.Path("data/genomes/").mkdir(parents=True, exist_ok=True)
-    out.to_csv(f"data/genomes/{superkingdom}.csv",index=False)
+    out.to_csv(f"data/genomes/build/{superkingdom}-filtered.csv",index=False)
 
 for domain in ["archaea", "bacteria"]:
     process(domain)

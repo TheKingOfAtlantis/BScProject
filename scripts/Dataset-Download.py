@@ -95,7 +95,7 @@ class EntrezXML:
             return dict(collections.ChainMap(*values))
         else: return result
 
-    def get(self, action, progress = True, as_xml = False, **params):
+    def get(self, action, progress = True, output = "python", **params):
         """
         Sends a request to performa specific action using the Entrez Utility APIs
 
@@ -107,8 +107,10 @@ class EntrezXML:
                         - Entrez.Action.info:    Sends a einfo GET request
             progress -- Whether or not to display the tqdm progress bar
                         while downloading the results
-            as_xml -- Skips the post-processing of the results into a
-                      JSON-like python object
+            output -- Determines how the result is outputted:
+                        - raw => Raw result received are returned
+                        - native => Skips the post-processing of the results into a JSON-like python object
+                        - python => Creates a nested JSON-like python object
         """
 
         # Add additional parameters required by the Entrez API
@@ -120,8 +122,10 @@ class EntrezXML:
             params["api_key"] = self._api
 
         response = self.__runAction(action, progress, **params)
-        if(as_xml): return self.__toXML(response)
-        else:
+
+        if(output == "raw"): return response
+        elif(output == "native"): return self.__toXML(response)
+        elif(output == "python"):
             xml = self.__parse(response)
             return self.__process(action, xml)
 
@@ -138,22 +142,10 @@ entrez_search = Entrez.get(
     useHistory = "y"
 )
 
-entrez_search = Entrez.get(
-    EntrezXML.Action.search,
-    db   = "assembly",
-    term = (
-        '("Bacteria"[Organism] OR "Archaea"[Organism]) AND '
-        'latest_refseq[filter] AND '
-        '(latest[filter] AND all[filter] NOT anomalous[filter])'
-    ),
-    useHistory = "y"
-)
-
 # Roughly 52.4 MiB download
 entrez_summary = Entrez.get(
     EntrezXML.Action.summary,
-    as_xml    = True,
-    db        = "assembly",
+    output    = "native",
     query_key = entrez_search["QueryKey"],
     WebEnv    = entrez_search["WebEnv"],
 )
@@ -162,10 +154,9 @@ import pandas as pd
 
 summary = pd.DataFrame(
     [{
-        "uid":       item.attrib["uid"], # Get the list of UIDs used by NCBI
-        "genbank_accession":
-        "refseq_accession": item.findtext("AssemblyAccession"),
-        "tax_id":    item.findtext("SpeciesTaxid")
+        "uid": item.attrib["uid"], # Get the list of UIDs used by NCBI
+        "accession_genbank": item.find("Synonym").findtext("Genbank"),
+        "accession_refseq":  item.find("Synonym").findtext("RefSeq")
     } for item in entrez_summary.findall(".//DocumentSummary")]
 )
 pathlib.Path("data/genomes/build/").mkdir(parents=True, exist_ok=True)
@@ -230,3 +221,13 @@ if __name__ == "__main__":
         initializer=tqdm.set_lock,
         initargs=(tqdm.get_lock(),)
     ) as pool: pool.map(downloadFile, ["bacteria", "archaea"])
+
+summary["accession"] = summary["accession_genbank"].str.split(".", expand = True)[0]
+
+for domain in ["bacteria", "archaea"]:
+    ena_result = pd.read_csv(f"data/genomes/build/{domain}-ena.tsv", delimiter='\t')
+    result = pd.merge(
+        ena_result, summary,
+        on = "accession"
+    )
+    result.to_csv(f"data/genomes/build/{domain}-result.csv")

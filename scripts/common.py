@@ -10,6 +10,7 @@ if __name__ == "__main__":
 
 import Parallel
 import Filesystem
+import Download
 
 def getID(record):
     idtype = None

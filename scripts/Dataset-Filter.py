@@ -60,23 +60,24 @@ def process():
 
     # Select the species in each genus with the largest base count
     print("Selecting largest genomes")
-    largest = ids.loc[ids.groupby("genus", sort=False)["base_count"].idxmax()]
+    largest = ids.loc[ids.groupby("genus", sort=False)["length"].idxmax()]
 
     # As a sanity check we'll assert that we want only 1 accession per genus
     assert not (largest.groupby("genus").count()["accession"] != 1).any()
 
     # As a reference lets keep a list of the accession no. of each bacteria
     taxaDB = getDB()
-    out = largest.loc[:,["uid", "superkingdom", "accession", "tax_id", "base_count", "trans_table", "genus"]]
+    out = largest.loc[:,["uid", "superkingdom", "accession", "tax_id", "length", "genus", "link"]]
     out["sci_name"] = out["tax_id"].apply(taxaDB.sci_name)
     out = out.astype({
         "uid": 'int',
         "superkingdom": 'int',
         "accession": 'str',
         "tax_id": 'int',
-        "base_count": 'int',
-        "trans_table": 'int',
-        "genus": 'int'
+        "length": 'int',
+        "genus": 'int',
+        "link": 'str',
+        "sci_name": 'str'
     })
 
     out.to_csv(f"data/genomes/build/filtered.csv",index=False)

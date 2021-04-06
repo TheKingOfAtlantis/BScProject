@@ -3,14 +3,15 @@ from EntrezCommon import Entrez
 
 import pathlib
 
-Database = "nucleotide"
+Database = "assembly"
 entrez_search = Entrez.get(
     Entrez.Action.search,
     db   = Database,
     term = (
-        '("Bacteria"[Organism] OR "Archaea"[Organism]) AND '
-        'refseq[filter] AND '
-        '"complete genome"'
+        'prokaryota[orgn] AND '
+        '"representative genome"[refseq category] AND '
+        '((latest[filter] OR "latest refseq"[filter]) AND all[filter] NOT anomalous[filter]) AND'
+        '"complete genome"[filter]'
     ),
     useHistory = "y"
 )
@@ -21,19 +22,28 @@ entrez_summary = Entrez.getAll(
     db        = Database,
     count     = entrez_search["Count"],
     query_key = entrez_search["QueryKey"],
-    WebEnv    = entrez_search["WebEnv"],
-    version   = "2.0"
+    WebEnv    = entrez_search["WebEnv"]
 )
 
-summary = pd.DataFrame([
-    {
-        "uid":         item.findtext("Gi"), # Get the list of UIDs used by NCBI
-        "accession":   item.findtext("AccessionVersion"),
-        "tax_id":      item.findtext("TaxId"),
-        "base_count":  item.findtext("Slen"),
-        "trans_table": item.findtext("GeneticCode"),
-        "genome":      item.findtext("Genome"),
-    } for result in entrez_summary for item in result.findall(".//DocumentSummary")
-])
+def LengthFromCDATA(cdata):
+    import xml.etree.ElementTree as xml
+    import re
+
+    return int(re.findall('<Stat category="total_length" sequence_tag="all">(\d+)</Stat>', cdata)[0])
+
+summary = pd.DataFrame([{
+    "uid":               item.attrib["uid"],
+    "accession":         item.find("Synonym").findtext("Genbank").split(".")[0],
+    "accession_genbank": item.find("Synonym").findtext("Genbank"),
+    "accession_refseq":  item.find("Synonym").findtext("RefSeq"),
+    "status":            item.findtext("AssemblyStatus"),
+    "tax_id":            item.findtext("Taxid"),
+    "length":            LengthFromCDATA(item.findtext("Meta")),
+    "link":              item.findtext("FtpPath_RefSeq")
+} for result in entrez_summary for item in result.findall(".//DocumentSummary")])
+
+# Save space by keeping a truncated list
+summary.link = summary.link.str.replace("ftp://ftp.ncbi.nlm.nih.gov/genomes", "", regex=False)
+
 pathlib.Path("data/genomes/build/").mkdir(parents=True, exist_ok=True)
 summary.to_csv("data/genomes/build/ncbi.csv", index=False)

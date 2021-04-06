@@ -52,5 +52,34 @@ def decompress(inputPath):
 Parallel.loadParallel(
     decompress,
     outputFiles,
-    len(outputFiles)
+    len(outputFiles),
+    desc = "Decompressing *.gbff.gz => *.gbff"
 )
+
+# To avoid having to completely rewrite our code for genbank files
+# We should try to convert them to EMBL files
+
+def convert(x):
+    import re
+    from Bio import SeqIO
+
+    inputPath, domain = x
+
+    accession  = re.findall("(GCF_\d+\.\d+)", inputPath)[0]
+    outputPath = outputDirRoot + f"out/{domain}/" + accession + ".embl"
+
+    with open(outputPath, "w") as outputFile:
+        with open(inputPath, "r") as inputFile:
+            data = SeqIO.parse(inputFile, "genbank")
+            SeqIO.write(data, outputFile, "embl")
+
+import itertools, glob
+for domain in ["archaea", "bacteria"]:
+    Filesystem.mkdir(outputDirRoot + f"out/{domain}/")
+
+    files = glob.glob(outputDirRoot + f"interm/{domain}/*")
+    Parallel.loadParallel(
+        convert, zip(files, itertools.repeat(domain)),
+        len(files),
+        desc = f"Converting {domain}/*.gbff => *.embl"
+    )

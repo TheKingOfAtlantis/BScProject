@@ -21,7 +21,6 @@ def pullGeneIds(feature):
     if("locus_tag" in qualifiers):  idTypes.append("locus_tag")
     if("protein_id" in qualifiers): idTypes.append("protein_id")
     if("gene" in qualifiers): idTypes.append("gene")
-    if("product" in qualifiers): idTypes.append("product")
     if("db_xref" in qualifiers):
         # With external refs need to seperate ID from ID type
         for id in qualifiers["db_xref"]:
@@ -64,6 +63,8 @@ if __name__ == "__main__":
     # Use the order to keep record of how many elements can be addressed
     # With the first able to address the most - Order will be used to determine
     # in what order to check for each ID
+
+    print("Determining minimum ID set")
     minimal = collections.OrderedDict()
     remains = list(itertools.chain.from_iterable(idTypes))
 
@@ -72,7 +73,6 @@ if __name__ == "__main__":
         minimal[count.most_common(1)[0][0]] = None
 
         remains = list(filter(lambda x: set(minimal.keys()).isdisjoint(x), remains))
-    print(list(minimal.keys()))
 
     with open("data/qc/minIds.txt", "w") as file:
         file.write("\n".join(list(minimal.keys())))

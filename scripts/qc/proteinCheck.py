@@ -81,12 +81,12 @@ if __name__ == "__main__":
 
     import sys
     sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
-    from common import Filesystem, Parallel
+    from common import Filesystem
 
-    FileSystem.mkdir("data/qc/proteins/")
+    Filesystem.mkdir("data/qc/proteins/")
 
-    result = dict(Parallel.loadGlob("data/genomes/archaea/*", check, desc = "Checking Archaea CDSs"))
+    result = dict(Filesystem.loadGlob("data/genomes/archaea/*", check, desc = "Checking Archaea CDSs"))
     with open("data/qc/proteins/archaea.json", "w") as file: json.dump(result, file)
 
-    result = dict(Parallel.loadGlob("data/genomes/bacteria/*", check, desc = "Checking Bacteria CDSs"))
+    result = dict(Filesystem.loadGlob("data/genomes/bacteria/*", check, desc = "Checking Bacteria CDSs"))
     with open("data/qc/proteins/bacteria.json", "w") as file: json.dump(result, file)

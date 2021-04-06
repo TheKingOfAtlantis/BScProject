@@ -31,8 +31,8 @@ def loadGlob(pattern, callable, mode = "r", desc = None, *args, **kwargs):
         __loadGlob,
         zip( # Since we can only pass a single argument: zip them together
             paths,                      # List of paths to process
-            itertools.repeat(mode),     # Mode by which the file shall be accessed
             itertools.repeat(callable), # Callable to be run in each process/file
+            itertools.repeat(mode),     # Mode by which the file shall be accessed
             itertools.repeat(args),     # Extra parameters to pass to operation
             itertools.repeat(kwargs)    # Extra parameters to pass to operation
         ), len(paths),

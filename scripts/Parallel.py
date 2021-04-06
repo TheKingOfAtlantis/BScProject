@@ -41,11 +41,11 @@ def loadParallel(callable, param, count = None, **tqdmParam):
         return [x for x in result if x is not None] # Remove any None values
 
 def __concatPreprocessor(x):
-    data, preprocessor, axis, args, kwargs = x
+    data, preprocessor, args, kwargs = x
     return pd.concat(preprocessor(data), *args, **kwargs)
 
 def __concat(x):
-    data, axis, args, kwargs = x
+    data, args, kwargs = x
     return pd.concat(data, *args, **kwargs)
 
 def concat(data, preprocessor = None, *args, **kwargs):

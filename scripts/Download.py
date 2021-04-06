@@ -18,23 +18,26 @@ def __request(method, url, **tqdmParams):
     return result
 
 def __requestFile(method, url, file, **tqdmParams):
-    response   = method(url, stream=True)
-    block_size = 1024
-    file_size  = int(response.headers.get('Content-Length', 0))
+    try:
+        response   = method(url, stream=True)
+        block_size = 1024
+        file_size  = int(response.headers.get('Content-Length', 0))
 
-    progress = tqdm(**tqdmParams)
+        progress = tqdm(**tqdmParams)
 
-    with open(file, "wb") as file:
-        for data in response.iter_content(block_size):
-            progress.update(len(data))
-            file.write(data)
-
+        with open(file, "wb") as file:
+            for data in response.iter_content(block_size):
+                progress.update(len(data))
+                file.write(data)
+    except Exception as e:
+        with open("download.err", "a") as err:
+            err.write(f"{url} failed with {e}")
 def __processRequest(x):
     (method, url, tqdmParams) = x
     return __request(method, url, **tqdmParams)
 def __processFileRequest(x):
     (method, url, file, tqdmParams) = x
-    return __requestFile(method, url, **tqdmParams)
+    return __requestFile(method, url, file, **tqdmParams)
 
 def get(urls, **tqdmParams):
     import requests

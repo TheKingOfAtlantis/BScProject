@@ -67,7 +67,7 @@ def process():
 
     # As a reference lets keep a list of the accession no. of each bacteria
     taxaDB = getDB()
-    out = largest.loc[:,["uid", "superkingdom", "accession", "tax_id", "length", "genus", "link"]]
+    out = largest.loc[:,["uid", "superkingdom", "accession", "accession_refseq", "tax_id", "length", "genus", "link"]]
     out["sci_name"] = out["tax_id"].apply(taxaDB.sci_name)
     out = out.astype({
         "uid": 'int',

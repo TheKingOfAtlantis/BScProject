@@ -8,12 +8,12 @@ def mkdir(path):
 def __loadGlob(x):
     # Each process calls this function
     # In here we get the file and pass it to the operation
-    path, op, args, kwargs = x
+    path, op, mode, args, kwargs = x
 
-    with open(path) as file: # Open zip file
+    with open(path, mode) as file: # Open zip file
         return op(file, *args, **kwargs)
 
-def loadGlob(pattern, callable, desc = None, *args, **kwargs):
+def loadGlob(pattern, callable, mode = "r", desc = None, *args, **kwargs):
     """
         Loads various files in parallel and runs a given subroutine with the
         file as the first parameter
@@ -31,6 +31,7 @@ def loadGlob(pattern, callable, desc = None, *args, **kwargs):
         __loadGlob,
         zip( # Since we can only pass a single argument: zip them together
             paths,                      # List of paths to process
+            itertools.repeat(mode),     # Mode by which the file shall be accessed
             itertools.repeat(callable), # Callable to be run in each process/file
             itertools.repeat(args),     # Extra parameters to pass to operation
             itertools.repeat(kwargs)    # Extra parameters to pass to operation

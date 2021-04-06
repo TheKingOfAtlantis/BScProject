@@ -1,4 +1,8 @@
 
+import sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
+from common import Parallel
+
 import pandas as pd
 
 from Bio import SeqIO, SeqUtils
@@ -20,21 +24,14 @@ def LoadRecord(feature, toFind = "CDS"):
 
     return (feature.id, data) # Pair the data with the record ID
 
-gc = []
-data = list(SeqIO.parse("data/genomes/human.fna", "fasta"))
-
-import sys, pathlib
-sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
-import common, os
-
-from multiprocessing import Pool
-import numpy as np
 
 def concatPreprocess(data): return { k:pd.DataFrame(v) for k,v in data }
 
 if __name__ == "__main__":
-    result = common.__loadParallel(LoadRecord, data, len(data), True, False)
-    result = common.concat(result, concatPreprocess)
+    data = list(SeqIO.parse("data/genomes/human.fna", "fasta"))
+
+    result = Parallel.loadParallel(LoadRecord, data, len(data), desc = "Processing Human Genome")
+    result = Parallel.concat(result, concatPreprocess)
     result.to_json("data/gc/cds/human.json", orient="table")
 
 # Humans have high GC due to high recombintation rates + GC Conversion

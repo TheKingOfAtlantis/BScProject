@@ -5,6 +5,10 @@
 #  - Shrink the list available in each genome down (w/i the seperate processes)
 #  - Shrink the list available across all genomes
 
+import sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
+from common import Filesystem
+
 import functools, collections, itertools
 
 def pullGeneIds(feature):
@@ -46,11 +50,8 @@ def shrinkGenomeIds(file, toFind):
         else: ids.append(res)
     return ids
 
-import sys, pathlib
-sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
-from common import loadGlob
 if __name__ == "__main__":
-    idTypes = loadGlob("data/genomes/*/*.embl", shrinkGenomeIds, extra=["CDS", "tRNA"])
+    idTypes = Filesystem.loadGlob("data/genomes/*/*.embl", shrinkGenomeIds, toFind=["CDS", "tRNA"], desc = "Checking ID usage")
 
     # Plan to find minimal set
     # 1) Count frequence of each Id types usage
@@ -74,6 +75,4 @@ if __name__ == "__main__":
     print(list(minimal.keys()))
 
     with open("data/qc/minIds.txt", "w") as file:
-        file.write("\n".join(
-            list(minimal.keys())
-        ))
+        file.write("\n".join(list(minimal.keys())))

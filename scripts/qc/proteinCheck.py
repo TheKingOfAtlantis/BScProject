@@ -77,16 +77,16 @@ def check(file):
 
 if __name__ == "__main__":
     import pandas as pd
-    import itertools, pathlib, json
+    import pathlib, json
 
     import sys
     sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
-    from common import loadGlob
+    from common import Filesystem, Parallel
 
-    pathlib.Path("data/qc/proteins/").mkdir(parents=True, exist_ok=True)
+    FileSystem.mkdir("data/qc/proteins/")
 
-    result = dict(loadGlob("data/genomes/archaea/*", check))
+    result = dict(Parallel.loadGlob("data/genomes/archaea/*", check, desc = "Checking Archaea CDSs"))
     with open("data/qc/proteins/archaea.json", "w") as file: json.dump(result, file)
 
-    result = dict(loadGlob("data/genomes/bacteria/*", check))
+    result = dict(Parallel.loadGlob("data/genomes/bacteria/*", check, desc = "Checking Bacteria CDSs"))
     with open("data/qc/proteins/bacteria.json", "w") as file: json.dump(result, file)

@@ -3,7 +3,7 @@ from Bio.SeqFeature import FeatureLocation
 
 import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
-from common import loadGlob, concat, getID
+from common import Filesystem, Parallel, getID
 
 import pandas as pd
 
@@ -13,7 +13,7 @@ def isInvalidFeature(genome, feature):
     rows = rows[rows["id"] == getID(feature)]
     return rows.empty
 
-def LoadRecord(file, toFind = "CDS"):
+def LoadRecord(file, toFind):
     record = next(SeqIO.parse(file, "embl")) # Load the record from the file
     data = [] # We will store the data we generate here
 
@@ -43,19 +43,21 @@ def LoadRecord(file, toFind = "CDS"):
     return (record.id, data) # Pair the data with the record ID
 
 def concatPreprocess(data): return { k:pd.DataFrame(v) for k,v in data }
-
-import pathlib
 if __name__ == "__main__":
-
     toFind = ["CDS", "tRNA"]
 
-    for geneType in toFind:
-        # Make sure we have the path to export to (including parents)
-        pathlib.Path(f"data/gc/{geneType.lower()}").mkdir(parents=True, exist_ok=True)
+    # Make sure we have the path to export to (including parents)
+    Filesystem.mkdir(f"data/gc/{geneType.lower()}")
 
-        print(f"{geneType}:")
-        archaea_gene_gc = loadGlob("data/genomes/archaea/*", LoadRecord, extra=toFind)
-        concat(archaea_gene_gc, concatPreprocess).to_json(f"data/gc/{geneType.lower()}/archaea.json", orient="table")
+    archaea_gene_gc = Filesystem.loadGlob("data/genomes/archaea/*", LoadRecord, toFind=toFind, desc = f"Processing Archaea {geneType}")
+    Parallel.concat(archaea_gene_gc, concatPreprocess).to_json(f"data/gc/{geneType.lower()}/archaea.json", orient="table")
 
-        bacteria_gene_gc = loadGlob("data/genomes/bacteria/*", LoadRecord, extra=toFind)
-        concat(bacteria_gene_gc, concatPreprocess).to_json(f"data/gc/{geneType.lower()}/bacteria.json", orient="table")
+    bacteria_gene_gc = Filesystem.loadGlob("data/genomes/bacteria/*", LoadRecord, toFind=toFind, desc = f"Processing Bacteria {geneType}")
+    Parallel.concat(bacteria_gene_gc, concatPreprocess).to_json(f"data/gc/{geneType.lower()}/bacteria.json", orient="table")
+
+
+# def LoadRecord(file, toFind = "CDS"):
+#     record = next(SeqIO.parse(file, "embl")) # Load the record from the file
+#     record.
+#  if __name__ == "__main__":
+#     archaea_gene_gc = loadGlob("data/genomes/*/*", LoadRecord)

@@ -1,4 +1,9 @@
-import os, json, itertools, pathlib
+
+import sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
+from common import Filesystem
+
+import os
 import pandas as pd
 import numpy as np
 
@@ -75,14 +80,9 @@ def plotGCvsFreq(name, freq, group, pdf = False):
 
         ax.set_ylim((-5, 105))
 
-        pathlib.Path(f"plot/gc/{group}").mkdir(parents=True, exist_ok=True)
+        Filesystem.mkdir(f"plot/gc/{group}")
         fig.savefig(f"plot/gc/{group}/{name}-stop-shift{int(shift)}.png")
         if(pdf): fig.savefig(f"plot/gc/{group}/{name}-stop-shift{int(shift)}.pdf")
-
-
-import sys, pathlib
-sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
-from common import loadGlob
 
 def load(file, group):
     name  = os.path.basename(file.name).split(".")[0]
@@ -94,5 +94,5 @@ def load(file, group):
     plotGCvsFreq(name, calculateFreq(noTAC), group + "+TAG")
 
 if __name__ in "__main__":
-    loadGlob("data/gc/cds/*.json", load, extra="cds")
-    loadGlob("data/gc/trna/*.json", load, extra="trna")
+    Filesystem.loadGlob("data/gc/cds/*.json", load, group="cds", desc="Plotting CDS Data")
+    Filesystem.loadGlob("data/gc/trna/*.json", load, group="trna", desc="Plotting tRNA Data")

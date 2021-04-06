@@ -1,6 +1,7 @@
 import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
-from common import loadGlob
+
+from common import Filesystem
 from Bio import SeqIO, SeqUtils
 
 def CalculateGC(file):
@@ -9,12 +10,10 @@ def CalculateGC(file):
 
 import json, pathlib
 if __name__ == "__main__":
-    pathlib.Path(f"data/gc/").mkdir(parents=True, exist_ok=True)
+    Filesystem.mkdir("data/gc/")
 
-    archaea_gc = loadGlob("data/genomes/archaea/*", CalculateGC)
+    archaea_gc = Filesystem.loadGlob("data/genomes/archaea/*", CalculateGC, desc = "Processing Archaea")
     with open("data/gc/archaea.json", "w") as js: json.dump(archaea_gc, js)
-    del archaea_gc
 
-    bacteria_gc = loadGlob("data/genomes/bacteria/*", CalculateGC)
+    bacteria_gc = Filesystem.loadGlob("data/genomes/bacteria/*", CalculateGC, desc = "Processing Bacteria")
     with open("data/gc/bacteria.json", "w") as js: json.dump(bacteria_gc, js)
-    del bacteria_gc

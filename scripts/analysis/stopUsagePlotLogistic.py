@@ -1,11 +1,12 @@
-import pathlib
+import sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
+from common import Filesystem
 
 import pandas as pd
 import numpy as np
 
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
-
 
 human = pd.read_json("./data/gc/cds/human.json", orient = "table")
 human[["gc", "gc1", "gc2", "gc3"]] = pd.DataFrame(human.gc.tolist(), index=human.index)
@@ -25,5 +26,5 @@ for stop in ['TAA', 'TAG', 'TGA']:
     predict_x = np.linspace(human['gc3'].min(), human['gc3'].max())
     ax.plot(predict_x,result.predict(predict_x), "-")
 
-    pathlib.Path("plot/gc/cds/").mkdir(parents=True, exist_ok=True)
+    Filesystem.mkdir("plot/gc/cds/")
     plt.savefig(f"plot/gc/cds/human-logit-{stop}.png")

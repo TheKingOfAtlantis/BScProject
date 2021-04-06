@@ -7,12 +7,16 @@
 # Plot genomes size vs no of genes
 # Should fit nicely to a straight line
 
-import itertools, pathlib
+import sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
+
+import itertools
 from Bio import SeqIO
 from collections import Counter
+from common import Filesystem
 
-import sys
-sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
+import pandas as pd
+import matplotlib.pyplot as plt
 
 def getTranslationTable(file):
     record = next(SeqIO.parse(file, "embl"))
@@ -25,11 +29,6 @@ def getTranslationTable(file):
             x.qualifiers["transl_table"] for x in record.features if x.type == "CDS"
         ))
     )
-
-from common import loadGlob
-
-import pandas as pd
-import matplotlib.pyplot as plt
 
 def plotDistribution(data):
     fig, ax = plt.subplots(1, len(data.columns), sharey=True)
@@ -48,15 +47,15 @@ def plotDistribution(data):
     return fig
 
 if __name__ == "__main__":
-    pathlib.Path("data/qc/trans_table/").mkdir(parents=True, exist_ok=True)
-    pathlib.Path("plot/qc/trans_table/").mkdir(parents=True, exist_ok=True)
+    Filesystem.mkdir("data/qc/trans_table/")
+    Filesystem.mkdir("plot/qc/trans_table/")
 
-    archaea_tables = pd.DataFrame(dict(loadGlob("data/genomes/archaea/*", getTranslationTable))).T
+    archaea_tables = pd.DataFrame(dict(Filesystem.loadGlob("data/genomes/archaea/*", getTranslationTable, desc = "Checking Archaea Translation Tables"))).T
     archaea_tables.to_csv("data/qc/trans_table/archaea.csv")
     archaea_tables.count().plot(kind='bar', figsize=(6,6)).get_figure().savefig("plot/qc/trans_table/archaea.png")
     plotDistribution(archaea_tables).savefig("plot/qc/trans_table/archaea-distribution.png")
 
-    bacteria_tables = pd.DataFrame(dict(loadGlob("data/genomes/bacteria/*", getTranslationTable))).T
+    bacteria_tables = pd.DataFrame(dict(Filesystem.loadGlob("data/genomes/bacteria/*", getTranslationTable, desc = "Checking Bacteria Translation Tables"))).T
     bacteria_tables.to_csv("data/qc/trans_table/bacteria.csv")
     bacteria_tables.count().plot(kind='bar', figsize=(19,6)).get_figure().savefig("plot/qc/trans_table/bacteria.png")
     plotDistribution(bacteria_tables).savefig("plot/qc/trans_table/bacteria-distribution.png")

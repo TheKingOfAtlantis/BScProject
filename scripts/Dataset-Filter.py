@@ -6,7 +6,7 @@ import pandas as pd
 from tqdm import tqdm
 from multiprocessing import Pool
 
-from common import loadGlob, concat
+from common import Parallel
 
 def getDB():
     from taxadb.taxid import TaxID
@@ -23,19 +23,22 @@ def lineageConcat(block):
 
 def process():
     result = pd.read_csv(f"data/genomes/build/ncbi.csv")
-    with Pool(os.cpu_count()) as pool:
+
+    with Parallel.getPool() as pool:
         # Some taxa ids referred to by multiple accession no.
         # So we filter our list to a unique set of taxa IDs
 
         # Now we need to group by genus and select just one species to use
         # First lets get the lineage of each bacteria taxa ID
         taxa_result = pd.DataFrame({ "tax_id": pd.unique(result.tax_id) })
-        taxa_result["lineage"] = list(tqdm(pool.imap(
+        taxa_result["lineage"] = Parallel.loadParallel(
             getLineage,
-            taxa_result.tax_id
-        ), total = len(taxa_result), desc="Retrieving lineages"))
+            taxa_result.tax_id,
+            count = len(taxa_result),
+            desc="Retrieving lineages"
+        )
 
-    taxa = concat(
+    taxa = Parallel.concat(
         taxa_result.values,
         lineageConcat, axis = 1
     ).T.rename_axis("tax_id").reset_index()
@@ -56,6 +59,7 @@ def process():
     )
 
     # Select the species in each genus with the largest base count
+    print("Selecting largest genomes")
     largest = ids.loc[ids.groupby("genus", sort=False)["base_count"].idxmax()]
 
     # As a sanity check we'll assert that we want only 1 accession per genus

@@ -1,7 +1,9 @@
 from enum import Enum
-from tqdm.auto import tqdm
+from tqdm.auto import tqdm, trange
 
+import math
 import numpy as np
+import pandas as pd
 
 import pathlib
 
@@ -9,12 +11,12 @@ class EntrezXML:
     class Action(Enum):
         search  = "esearch"
         summary = "esummary"
-        info    = "einfo"
+        info    = "einfo",
+        fetch   = "efetch"
 
     def __init__(self, email, api = None):
         self._email = email
         self._api   = api
-
 
     lastRequest = 0    # When we last requested data
     delay       = 0.37 # Can send 3 requests per sec w/o API (so delay for little)
@@ -129,105 +131,58 @@ class EntrezXML:
             xml = self.__parse(response)
             return self.__process(action, xml)
 
+    def getAll(self, action, count, progress = True, output = "python", **params):
+        blockSize = {
+            EntrezXML.Action.search:  100000,
+            EntrezXML.Action.summary: 10000,
+            EntrezXML.Action.fetch:   10000
+        }
+
+        return list(
+            self.get(
+                action   = action,
+                progress = progress,
+                output   = output,
+                retstart = i * blockSize[action],
+                retmax   = blockSize[action],
+                **params
+            ) for i in trange(math.ceil(count/blockSize[action]))
+        )
+
+
 Entrez = EntrezXML("ss2980@bath.ac.uk")
 
+Database = "nucleotide"
 entrez_search = Entrez.get(
     EntrezXML.Action.search,
-    db   = "assembly",
+    db   = Database,
     term = (
         '("Bacteria"[Organism] OR "Archaea"[Organism]) AND '
-        'latest_refseq[filter] AND '
-        '(latest[filter] AND all[filter] NOT anomalous[filter])'
+        'refseq[filter] AND '
+        '"complete genome"'
     ),
     useHistory = "y"
 )
 
-# Roughly 52.4 MiB download
-entrez_summary = Entrez.get(
+entrez_summary = Entrez.getAll(
     EntrezXML.Action.summary,
     output    = "native",
+    db        = Database,
+    count     = entrez_search["Count"],
     query_key = entrez_search["QueryKey"],
     WebEnv    = entrez_search["WebEnv"],
+    version   = "2.0"
 )
 
-import pandas as pd
-
-summary = pd.DataFrame(
-    [{
-        "uid": item.attrib["uid"], # Get the list of UIDs used by NCBI
-        "accession_genbank": item.find("Synonym").findtext("Genbank"),
-        "accession_refseq":  item.find("Synonym").findtext("RefSeq")
-    } for item in entrez_summary.findall(".//DocumentSummary")]
-)
+summary = pd.DataFrame([
+    {
+        "uid":         item.findtext("Gi"), # Get the list of UIDs used by NCBI
+        "accession":   item.findtext("AccessionVersion"),
+        "tax_id":      item.findtext("TaxId"),
+        "base_count":  item.findtext("Slen"),
+        "trans_table": item.findtext("GeneticCode"),
+        "genome":      item.findtext("Genome"),
+    } for result in entrez_summary for item in result.findall(".//DocumentSummary")
+])
 pathlib.Path("data/genomes/build/").mkdir(parents=True, exist_ok=True)
 summary.to_csv("data/genomes/build/ncbi.csv", index=False)
-
-# We nearly have everything, we just need sequence length
-# We can already do this with ENA so will just pull that and merge the results
-
-def getENAEndpoint(name):
-    superkingdom = {
-        "bacteria": 2,
-        "archaea": 2157,
-        "eukaryota": 2759
-    }
-
-    # Url to EBI ENA API endpoint to retrieve list of all the sequencies
-    # Specifically we ask for:
-    return (
-        'https://www.ebi.ac.uk/ena/portal/api/search?'
-        'result=assembly'
-        f'&query=tax_tree({superkingdom[name]})'    # We want to retrieve accession numbers for specific domain/superkingdom(s)
-        '&limit=0'                                  # We want every ID we can get a hold of (default: 100000)
-        '&fields=accession,tax_id,base_count'       # We want to have: accession id, NCBI taxanomic id and base count
-        '&format=tsv'                               # Gives our data back as a tsv
-    )
-    # These were useful for working out what filters to apply:
-    # - List of the Data Classes: https://ena-docs.readthedocs.io/en/latest/retrieval/general-guide/data-classes.html
-    # - List of the Taxonomic Divisions: https://www.ncbi.nlm.nih.gov/genbank/htgs/table1/
-
-def downloadFile(domain):
-    import requests, pathlib
-    from tqdm.contrib import tenumerate
-
-    url      = getENAEndpoint(domain)
-    response = requests.get(url, stream=True)
-    # Estimates the number of bar updates
-    block_size = 1024
-    file_size  = int(response.headers.get('Content-Length', 0))
-
-    progress = tqdm(
-            position = 0 if(domain == "archaea") else 1,
-            leave = True,
-            total = file_size,
-            desc = f"Dowloading {domain} IDs",
-            unit = 'iB',
-            unit_scale=True
-    )
-
-    with open(f"data/genomes/build/{domain}-ena.tsv", 'wb') as file:
-        for data in response.iter_content(block_size):
-            progress.update(len(data))
-            file.write(data)
-
-from multiprocessing import Pool, RLock, freeze_support
-from tqdm import tqdm
-import os
-if __name__ == "__main__":
-    freeze_support()        # for Windows support
-    tqdm.set_lock(RLock())  # for managing output contention
-    with Pool(
-        processes=2,
-        initializer=tqdm.set_lock,
-        initargs=(tqdm.get_lock(),)
-    ) as pool: pool.map(downloadFile, ["bacteria", "archaea"])
-
-summary["accession"] = summary["accession_genbank"].str.split(".", expand = True)[0]
-
-for domain in ["bacteria", "archaea"]:
-    ena_result = pd.read_csv(f"data/genomes/build/{domain}-ena.tsv", delimiter='\t')
-    result = pd.merge(
-        ena_result, summary,
-        on = "accession"
-    )
-    result.to_csv(f"data/genomes/build/{domain}-result.csv")

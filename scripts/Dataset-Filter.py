@@ -21,9 +21,8 @@ def getLineage(taxid):
 def lineageConcat(block):
     return {x[0]:pd.Series(x[1], dtype='int') for x in block}
 
-def process(superkingdom):
-    print(superkingdom)
-    result = pd.read_csv(f"data/genomes/build/{superkingdom}-result.csv")
+def process():
+    result = pd.read_csv(f"data/genomes/build/ncbi.csv")
     with Pool(os.cpu_count()) as pool:
         # Some taxa ids referred to by multiple accession no.
         # So we filter our list to a unique set of taxa IDs
@@ -64,10 +63,18 @@ def process(superkingdom):
 
     # As a reference lets keep a list of the accession no. of each bacteria
     taxaDB = getDB()
-    out = largest.loc[:,["uid", "accession", "tax_id", "base_count", "genus"]]
+    out = largest.loc[:,["uid", "superkingdom", "accession", "tax_id", "base_count", "trans_table", "genus"]]
     out["sci_name"] = out["tax_id"].apply(taxaDB.sci_name)
+    out = out.astype({
+        "uid": 'int',
+        "superkingdom": 'int',
+        "accession": 'str',
+        "tax_id": 'int',
+        "base_count": 'int',
+        "trans_table": 'int',
+        "genus": 'int'
+    })
 
-    out.to_csv(f"data/genomes/build/{superkingdom}-filtered.csv",index=False)
+    out.to_csv(f"data/genomes/build/filtered.csv",index=False)
 
-for domain in ["archaea", "bacteria"]:
-    process(domain)
+process()

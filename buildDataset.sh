@@ -1,13 +1,20 @@
+#!/bin/bash
 
 python scripts/DatasetDownload.py # Fetchs the metadata needed to select the assemblies we need
-python scripts/DatasetFilter.py # Filters the assemblies based on the metadata
-python scripts/DatasetFetch.py # Downloads the assemblies which have been selected
+python scripts/DatasetFilter.py   # Filters the assemblies based on the metadata
+python scripts/DatasetFetch.py    # Downloads the assemblies which have been selected
 
-cp data/genomes/build/out/* data/genomes/
+cp -r data/genomes/build/out/* data/genomes/
 
-read -p "Do you want to delete data/genomes/build/? " -n 1 -r
-echo    # (optional) move to a new line
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
+if [[ $1 =~ [Nn]$ ]]; then
+    echo "Build files have been kept"
+elif [[ $1 =~ [Yy]$ ]]; then
+    REPLY=y
+else
+    read -p "Do you want to delete build files? " -n 1 -r
+    echo
+fi
+if [[ $REPLY =~ [Yy]$ ]]; then
+    echo Deleting build files
     rm -r data/genomes/build/
 fi

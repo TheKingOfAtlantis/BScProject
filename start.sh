@@ -1,4 +1,8 @@
-#!/bin/sh
+#!/bin/bash
+
+# If something goes wrong we want to exit immediately
+# Otherwise might cause downstream problems and error messeage would get lost
+set -e
 
 # Check if we have the genomes
 if [ ! -d "./data/genomes" ]; then

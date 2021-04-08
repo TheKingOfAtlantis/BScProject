@@ -6,7 +6,7 @@ from tqdm.auto import tqdm
 
 import pandas as pd
 
-def getPool(jobCount = None, **kwargs):
+def getPool(jobCount = None, limit = None, **kwargs):
     """
         Brief: Creates a multiprocess pool to most efficiently tackle the job
 
@@ -18,8 +18,14 @@ def getPool(jobCount = None, **kwargs):
         will be avaliable to quickly process the job (i.e. the number of processes
         will be the same as the number of cores avaliable)
 
+        Additionally, the user may passes a upper limit on the number of processes. If
+        the number of jobs is lower or the number of cores is lower then these will
+        define the upper limit, however if these would exceed it then the ceiling is set
+        to the given limit
+
         Param:
             jobCount -- The number of jobs to be completed
+            limit    -- User defined limit on number of processes
             **kargs  -- Optional arguments to pass to Pool
     """
     import os
@@ -27,6 +33,12 @@ def getPool(jobCount = None, **kwargs):
         os.cpu_count(),
         jobCount
     )
+    if(limit is not None):
+        processes = min(
+            processes,
+            limit
+        )
+
     return Pool(processes = processes, **kwargs)
 
 def loadParallel(callable, param, count = None, **tqdmParam):

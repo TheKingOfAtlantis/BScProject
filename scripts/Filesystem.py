@@ -1,9 +1,13 @@
 
 from Parallel import *
 
-def mkdir(path):
+def mkdir(paths):
     import pathlib
-    pathlib.Path(path).mkdir(parents=True, exist_ok=True)
+    if(isinstance(paths, str)):
+        pathlib.Path(paths).mkdir(parents=True, exist_ok=True)
+    else:
+        for path in paths:
+            pathlib.Path(path).mkdir(parents=True, exist_ok=True)
 
 def __loadGlob(x):
     # Each process calls this function

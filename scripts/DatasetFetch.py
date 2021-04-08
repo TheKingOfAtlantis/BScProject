@@ -12,74 +12,82 @@ if(get_ipython() != None):
 
 filtered = pd.read_csv("data/genomes/build/filtered.csv")
 
+buildDir    = "data/genomes/build/"
+downloadDir = buildDir + "download/"
+intermDir   = buildDir + "interm/"
+outDir      = buildDir + "out/"
+
 fileSuffix = "_genomic.gbff.gz"
-files      = filtered.link.str.split("/").str[-1] + fileSuffix
 
-outputDirRoot = "data/genomes/build/"
-outputDir     = outputDirRoot + "download/"
-outputFiles   = outputDir + files
-Filesystem.mkdir(outputDir)
+domainMap = { 2: "bacteria",  2157: "archaea"}
 
-urls = "https://ftp.ncbi.nlm.nih.gov/genomes" + filtered.link + "/"
-urls = urls + files
+files = pd.DataFrame()
+files["accession"] = filtered.accession_refseq
+files["domain"]    = filtered.superkingdom.map(domainMap)
+files["url"]       = (
+    "https://ftp.ncbi.nlm.nih.gov/genomes" + filtered.link + "/" + # Url to the assembly directory
+    filtered.link.str.split("/").str[-1] + fileSuffix              # File to retrieve in the directory
+)
+files["gzFile"]    = downloadDir + files.accession +".gbff.gz"
+files["gbFile"]    = intermDir   + files.accession + ".gbff"
+files["emblFile"]  = outDir      + files.domain    + "/" + files.accession + ".embl"
 
-
-# We can now download all the files
-# FIXME: Progress bar output is a mess
-
-Download.getFile(urls, outputFiles)
+Filesystem.mkdir([
+    downloadDir,
+    intermDir
+] + [outDir + domain for domain in domainMap.values()])
 
 # Now that we have all the files download as gz files
 # We need to decompress them
 
-filtered.superkingdom = filtered.superkingdom.map({ 2: "bacteria",  2157: "archaea"})
-
-Filesystem.mkdir(outputDirRoot + "interm/bacteria")
-Filesystem.mkdir(outputDirRoot + "interm/archaea")
-
-def decompress(inputPath):
-    import gzip, shutil, re
-    # Remove the .gz extension
-    # Change output directory from download/ to out/
-    accession  = re.findall("(GCF_\d+\.\d+)", inputPath)[0]
-    info       = filtered[filtered.accession_refseq == accession].squeeze()
-    outputPath = inputPath[:-len(".gz")].replace("download", f"interm/{info.superkingdom}")
-
-    with open(outputPath, "wb") as outputFile:
-        with gzip.open(inputPath, "rb") as inputFile:
-            shutil.copyfileobj(inputFile, outputFile)
-
-Parallel.loadParallel(
-    decompress,
-    outputFiles,
-    len(outputFiles),
-    desc = "Decompressing *.gbff.gz => *.gbff"
-)
+def decompress(inputPath, isRetry = False):
+    import gzip, shutil
+    file = files[files.gzFile == inputPath].squeeze()
+    try:
+        with open(file.gbFile, "wb") as outputFile:
+            with gzip.open(file.gzFile, "rb") as inputFile:
+                shutil.copyfileobj(inputFile, outputFile)
+    except Exception as e:
+        if(not isRetry):
+            # File probably failed to download properly
+            # We'll give it another try
+            Download.getFile(file.url, file.gzFile)
+            decompress(inputFile, isRetry = True)
+        else:
+            # We've already tried to download the file again and still failed
+            # One choice left
+            print(accession)
+            raise e
 
 # To avoid having to completely rewrite our code for genbank files
 # We should try to convert them to EMBL files
 
-def convert(x):
+def convert(inputPath):
     import re
     from Bio import SeqIO
 
-    inputPath, domain = x
+    file = files[files.gbFile == inputPath].squeeze()
 
-    accession  = re.findall("(GCF_\d+\.\d+)", inputPath)[0]
-    outputPath = outputDirRoot + f"out/{domain}/" + accession + ".embl"
-
-    with open(outputPath, "w") as outputFile:
-        with open(inputPath, "r") as inputFile:
+    with open(file.emblFile, "w") as outputFile:
+        with open(file.gbFile, "r") as inputFile:
             data = SeqIO.parse(inputFile, "genbank")
             SeqIO.write(data, outputFile, "embl")
 
-import itertools, glob
-for domain in ["archaea", "bacteria"]:
-    Filesystem.mkdir(outputDirRoot + f"out/{domain}/")
+# We can now download all the files
+Download.getFile(
+    files.url, files.gzFile,
+    desc = "Downloading Assemblies",
+    disable=True, # Disables progress bar for individual files
+)
 
-    files = glob.glob(outputDirRoot + f"interm/{domain}/*")
-    Parallel.loadParallel(
-        convert, zip(files, itertools.repeat(domain)),
-        len(files),
-        desc = f"Converting {domain}/*.gbff => *.embl"
-    )
+Parallel.loadParallel(
+    decompress, files.gzFile,
+    len(files),
+    desc = "Decompressing *.gbff.gz => *.gbff"
+)
+
+Parallel.loadParallel(
+    convert, files.gbFile,
+    len(files),
+    desc = "Converting *.gbff => *.embl"
+)

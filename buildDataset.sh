@@ -6,9 +6,9 @@ headerend=$(tput sgr0)
 echo ${header} Building Prokaryote Dataset${headerend}
 echo
 
-python scripts/DatasetDownload.py # Fetchs the metadata needed to select the assemblies we need
-python scripts/DatasetFilter.py   # Filters the assemblies based on the metadata
-python scripts/DatasetFetch.py    # Downloads the assemblies which have been selected
+python scripts/dataset/FetchMetadata.py    # Fetchs the metadata needed to select the assemblies we need
+python scripts/dataset/Filter.py           # Filters the assemblies based on the metadata
+python scripts/dataset/DownloadAssembly.py # Downloads the assemblies which have been selected
 
 echo
 echo "${header}Building Human Dataset${headerend}"

@@ -1,3 +1,6 @@
+import sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
+
 import pandas as pd
 from EntrezCommon import Entrez
 from common import Filesystem

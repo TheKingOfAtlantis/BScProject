@@ -1,3 +1,5 @@
+import sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
 
 import os, pathlib
 import itertools, more_itertools

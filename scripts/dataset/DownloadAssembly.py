@@ -1,4 +1,5 @@
-# This file fetches the genome EMBL files
+import sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
 
 import pathlib
 import pandas as pd

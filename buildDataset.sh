@@ -3,6 +3,14 @@
 header=$(tput bold; tput smul)
 headerend=$(tput sgr0)
 
+if [ ! -d "./data/genomes" ]; then
+    echo
+    echo ${header} Building Taxa Database ${headerend}
+    echo
+    bash ./buildTaxa.sh
+fi
+
+echo
 echo ${header} Building Prokaryote Dataset${headerend}
 echo
 

@@ -19,7 +19,7 @@ class EntrezXML:
     delay       = 0.37 # Can send 3 requests per sec w/o API (so delay for little)
 
     @staticmethod
-    def __runAction(action, progress, **params):
+    def __runAction(action, progress, position, **params):
         """
             Sends the request to Entrez
 
@@ -50,8 +50,10 @@ class EntrezXML:
             file_size  = int(response.headers.get('Content-Length', 0))
 
             progress = tqdm(
-                desc       = f"Entrez {action.name}",
+                desc       = f"Entrez {action.name}" if position is None else f"Chunk {position}",
                 total      = file_size if (file_size > 0) else None,
+                position   = position,
+                leave      = True if position is None else False,
                 unit       = 'iB',
                 unit_scale = True
             )
@@ -97,7 +99,7 @@ class EntrezXML:
             return dict(collections.ChainMap(*values))
         else: return result
 
-    def get(self, action, progress = True, output = "python", **params):
+    def get(self, action, progress = True, position = None, output = "python", **params):
         """
         Sends a request to performa specific action using the Entrez Utility APIs
 
@@ -110,6 +112,7 @@ class EntrezXML:
                             - Entrez.Action.post:    Sends a ePost POST request
             progress -- Whether or not to display the tqdm progress bar
                         while downloading the results
+            position -- Progress bar position
             output   -- Determines how the result is outputted:
                             - raw    => Raw result received are returned
                             - native => Skips the post-processing of the results into a JSON-like python object
@@ -128,7 +131,7 @@ class EntrezXML:
             try: params["id"] = ",".join(iter(params["id"]))
             except: pass
 
-        response = self.__runAction(action, progress, **params)
+        response = self.__runAction(action, progress, position, **params)
 
         if(output == "raw"): return response
         elif(output == "native"): return self.__toXML(response)
@@ -143,15 +146,17 @@ class EntrezXML:
             EntrezXML.Action.fetch:   10000
         }
 
+        blocks = math.ceil(count/blockSize[action])
         return list(
             self.get(
                 action   = action,
                 progress = progress,
+                position = i + 1,
                 output   = output,
                 retstart = i * blockSize[action],
                 retmax   = blockSize[action],
                 **params
-            ) for i in trange(math.ceil(count/blockSize[action]))
+            ) for i in trange(blocks, position = 0, desc = f"Entrez {action.name}")
         )
 
 Entrez = EntrezXML("ss2980@bath.ac.uk")

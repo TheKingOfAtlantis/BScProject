@@ -1,5 +1,6 @@
 import pandas as pd
 from EntrezCommon import Entrez
+from common import Filesystem
 
 import pathlib
 
@@ -45,5 +46,5 @@ summary = pd.DataFrame([{
 # Save space by keeping a truncated list
 summary.link = summary.link.str.replace("ftp://ftp.ncbi.nlm.nih.gov/genomes", "", regex=False)
 
-pathlib.Path("data/genomes/build/").mkdir(parents=True, exist_ok=True)
+Filesystem.mkdir("data/genomes/build/")
 summary.to_csv("data/genomes/build/ncbi.csv", index=False)

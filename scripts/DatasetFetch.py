@@ -76,7 +76,7 @@ def convert(inputPath):
 # We can now download all the files
 Download.getFile(
     files.url, files.gzFile,
-    desc = "Downloading Assemblies",
+    description = "Downloading Assemblies",
     disable=True, # Disables progress bar for individual files
 )
 

@@ -12,11 +12,11 @@ import Parallel
 import Filesystem
 import Download
 
+with open("data/qc/minIds.txt") as file:
+    __minimalSet = [id for id in file]
+
 def getID(record):
-    idtype = None
-
-    if("protein_id" in record.qualifiers):  idtype = "protein_id"
-    elif("locus_tag" in record.qualifiers): idtype = "locus_tag"
+    for idType in __minimalSet:
+        if(idType in record.qualifiers):
+            return record.qualifiers[idType][0]
     else: raise Exception(f"Failed to find suitable ID for:\n{record}")
-
-    return record.qualifiers[idtype][0]

@@ -26,7 +26,12 @@ def __requestFile(method, url, file, **tqdmParams):
         block_size = 1024
         file_size  = int(response.headers.get('Content-Length', 0))
 
-        progress = tqdm(**tqdmParams)
+        progress = tqdm(
+            unit       = "iB",
+            total      = file_size,
+            unit_scale = True,
+            **tqdmParams
+        )
 
         with open(file, "wb") as file:
             for data in response.iter_content(block_size):
@@ -88,21 +93,21 @@ def getFile(urls, paths, limit = None, description = None, **tqdmParams):
     # If we were given a string then we only have 1 url to get
     # So we don't need to parallelise it
     if(isinstance(urls, str)):
-        __request(requests.get, urls, paths, **tqdmParams)
-
-    with getPool(len(urls), limit) as pool: list(tqdm(
-        pool.imap(
-            __processFileRequest, zip(
-                itertools.repeat(requests.get),
-                urls, paths,
-                range(len(urls)),
-                itertools.repeat(tqdmParams)
-            )
-        ),
-        desc     = description,
-        total    = len(urls),
-        position = 0
-    ))
+        __requestFile(requests.get, urls, paths, **tqdmParams)
+    else:
+        with getPool(len(urls), limit) as pool: list(tqdm(
+            pool.imap(
+                __processFileRequest, zip(
+                    itertools.repeat(requests.get),
+                    urls, paths,
+                    range(len(urls)),
+                    itertools.repeat(tqdmParams)
+                )
+            ),
+            desc     = description,
+            total    = len(urls),
+            position = 0
+        ))
 
 def post(urls, limit = None, description = None, **tqdmParams):
 

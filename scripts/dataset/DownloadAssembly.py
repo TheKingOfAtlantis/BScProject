@@ -14,9 +14,11 @@ if(get_ipython() != None):
 filtered = pd.read_csv("data/genomes/build/filtered.csv")
 
 buildDir    = "data/genomes/build/"
-downloadDir = buildDir + "download/"
-intermDir   = buildDir + "interm/"
-outDir      = buildDir + "out/"
+downloadDir = buildDir  + "download/"
+intermDir   = buildDir  + "interm/"
+GbDir       = intermDir + "gb/"
+EmblDir     = intermDir + "embl/"
+outDir      = buildDir  + "out/"
 
 fileSuffix = "_genomic.gbff.gz"
 
@@ -29,13 +31,14 @@ files["url"]       = (
     "https://ftp.ncbi.nlm.nih.gov/genomes" + filtered.link + "/" + # Url to the assembly directory
     filtered.link.str.split("/").str[-1] + fileSuffix              # File to retrieve in the directory
 )
-files["gzFile"]    = downloadDir + files.accession +".gbff.gz"
-files["gbFile"]    = intermDir   + files.accession + ".gbff"
-files["emblFile"]  = outDir      + files.domain    + "/" + files.accession + ".embl"
+files["gzFile"]    = downloadDir + files.accession + ".gbff.gz"
+files["gbFile"]    = GbDir       + files.accession + ".gbff"
+files["emblFile"]  = EmblDir     + files.accession + ".embl"
 
 Filesystem.mkdir([
     downloadDir,
-    intermDir
+    GbDir,
+    EmblDir
 ] + [outDir + domain for domain in domainMap.values()])
 
 # Now that we have all the files download as gz files
@@ -45,9 +48,9 @@ def decompress(inputPath, isRetry = False):
     import gzip, shutil
     file = files[files.gzFile == inputPath].squeeze()
     try:
-        with open(file.gbFile, "wb") as outputFile:
-            with gzip.open(file.gzFile, "rb") as inputFile:
-                shutil.copyfileobj(inputFile, outputFile)
+        with gzip.open(file.gzFile, "rb") as srcFile,
+                open(file.gbFile, "wb") as dstFile:
+                shutil.copyfileobj(srcFile, dstFile)
     except Exception as e:
         if(not isRetry):
             # File probably failed to download properly
@@ -68,11 +71,28 @@ def convert(inputPath):
     from Bio import SeqIO
 
     file = files[files.gbFile == inputPath].squeeze()
+    with open(file.gbFile, "r") as srcFile,
+         open(file.emblFile, "w") as dstFile,
+            SeqIO.convert(
+                srcFile, "genbank",
+                dstFile, "embl"
+            )
 
-    with open(file.emblFile, "w") as outputFile:
-        with open(file.gbFile, "r") as inputFile:
-            data = SeqIO.parse(inputFile, "genbank")
-            SeqIO.write(data, outputFile, "embl")
+# Finally to ensure we can still work with our preexisting code
+# We need to rename the files to be the same as record.id
+
+def rename(inputPath):
+    from Bio import SeqIO
+    import shutil
+    file = files[files.emblFile == inputPath].squeeze()
+    with open(file.emblFile, "r") as srcFile:
+        seq     = next(SeqIO.parse(inputFile, "embl"))
+        dstPath = outDir + f"{file.domain}/{seq.id}.embl"
+        # Parsing with BioPython means the file is at EOF
+        # so we need to reset the file to the start
+        srcFile.seek(0, 0)
+        with open(dstPath, "w") as dstFile:
+            shutil.copyfileobj(srcFile, dstFile)
 
 # We can now download all the files
 Download.getFile(
@@ -81,14 +101,23 @@ Download.getFile(
     disable=True, # Disables progress bar for individual files
 )
 
+# Decompress the files
 Parallel.loadParallel(
     decompress, files.gzFile,
     len(files),
     desc = "Decompressing *.gbff.gz => *.gbff"
 )
 
+# Convert to EMBL format
 Parallel.loadParallel(
     convert, files.gbFile,
     len(files),
     desc = "Converting *.gbff => *.embl"
+)
+
+# Rename to sequence accession ID
+Parallel.loadParallel(
+    rename, files.emblFile,
+    len(files),
+    desc = "Renaming files to use Accession ID"
 )

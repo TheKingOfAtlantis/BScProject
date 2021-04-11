@@ -4,23 +4,14 @@
 # - Check no internal stop codons
 # - Check ends with a stop codon
 
+import sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
+from common import Filesystem, getID
+
 from Bio import SeqIO
 from Bio.Data import CodonTable
 
 # Utility Function(s)
-
-def getId(feature):
-    qualifiers = feature.qualifiers
-
-    idType = ""
-    if("protein_id" in qualifiers):  idType = "protein_id"
-    elif("locus_tag" in qualifiers): idType = "locus_tag"
-    else: raise Exception("No suitable id types found!")
-
-    return {
-        "id_type": idType,
-        "id": qualifiers[idType][0]
-    }
 
 def getCodonTable(feature):
     return CodonTable.generic_by_id[int(feature.qualifiers["transl_table"][0])]
@@ -64,29 +55,31 @@ def internalCheck(seq, feature):
             return False
     return True
 
-def check(file):
+def __performCheck(file):
     ''' Collects the results of all the checks '''
     record = next(SeqIO.parse(file, "embl"))
-    return (record.id, [{**getId(feature), **{         # Retrieves a suitable ID for identifying the gene
+    return (record.id, pd.DataFrame([{
+        "id":       getID(feature),                     # Retrieves a suitable ID for identifying the gene
         "length":   lengthCheck(feature),               # Result of checking length of sequence (If sequence multiple of three == True)
         "start":    startCheck(record.seq, feature),    # Result of checking start is start codon (If start wtih start == True)
         "end":      endCheck(record.seq, feature),      # Result of checking end is stop codon (If ends with stop == True)
         "internal": internalCheck(record.seq, feature), # Result of checking for internal stop codons (If none found == True)
-    }} for i, feature in enumerate(filter(lambda x: x.type in "CDS", record.features))])
+    } for feature in filter(lambda x: x.type in "CDS", record.features)]))
 
+def performCheck(pattern, **kwargs):
+    data = pd.concat(dict(Filesystem.loadGlob(pattern, __performCheck, **kwargs)))
+    data = data.droplevel(1)\
+               .set_index("id", append=True)\
+               .rename_axis(index=["genome", "id"])
+    return data
 
 if __name__ == "__main__":
     import pandas as pd
-    import pathlib, json
-
-    import sys
-    sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
-    from common import Filesystem
 
     Filesystem.mkdir("data/qc/proteins/")
 
-    result = dict(Filesystem.loadGlob("data/genomes/archaea/*", check, desc = "Checking Archaea CDSs"))
-    with open("data/qc/proteins/archaea.json", "w") as file: json.dump(result, file)
+    result = performCheck("data/genomes/archaea/*", desc = "Checking Archaea CDSs")
+    result.to_json("data/qc/proteins/archaea.json", orient = "table")
 
-    result = dict(Filesystem.loadGlob("data/genomes/bacteria/*", check, desc = "Checking Bacteria CDSs"))
-    with open("data/qc/proteins/bacteria.json", "w") as file: json.dump(result, file)
+    result = performCheck("data/genomes/bacteria/*", desc = "Checking Bacteria CDSs")
+    result.to_json("data/qc/proteins/bacteria.json", orient = "table")

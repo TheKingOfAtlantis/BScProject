@@ -1,89 +1,76 @@
+import sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
+
+from IPython import get_ipython
+from IPython.display import display
+if(get_ipython() != None):
+    import os
+    os.chdir("../..")
+
 import pandas as pd
 from Bio import SeqIO
 import itertools, json
 
+from common import Parallel, getID
+
 def isolate(df):
     ''' Isolates those which failed '''
-    inv = ~df[["length", "start", "end", "internal"]] # Invert true <=> false
+    inv = ~df # Invert true <=> false
     return df[inv.any(axis=1)]
 
 def getData(name):
-    with open(f"data/qc/proteins/{name}.json") as file:
-        data = json.load(file)
-        data = pd.concat({
-            k:pd.DataFrame(v)
-            for k,v in data.items()
-        })
-    return isolate(data).rename_axis(index=["genome", "index"])
+    print(f"Isolating non-conforming {name} CDSs")
+    data = pd.read_json(f"data/qc/proteins/{name}.json", orient = "table")
+    return isolate(data)
 
 archaea  = getData("archaea")
 bacteria = getData("bacteria")
 
-pd.concat({
+isolated = pd.concat({
     "bacteria": bacteria,
     "archaea": archaea
-}).to_csv("data/qc/proteins/failed.csv")
+}, names = ["domain"])
+isolated.to_csv("data/qc/proteins/failed.csv")
 
 def __findPseudo(x):
-    genome, df, path = x
+    (domain, genome), df = x
+    ids = df.index.get_level_values("id")
+
     isPseudo = pd.DataFrame()
-    with open(f"{path}/{genome.split('.')[0]}.embl") as file:
-        record = next(SeqIO.parse(file, "embl"))
+    with open(f"data/genomes/{domain}/{genome}.embl") as file:
+        record   = next(SeqIO.parse(file, "embl"))
+        CDSs     = filter(lambda feature: feature.type == "CDS", record.features) # Filter down to CDSs (as our IDs work here)
+        isolated = filter(lambda cds: getID(cds) in ids, CDSs)                    # Isolate thoses whose IDs we have as isolated
+        psuedo   = filter(lambda cds: "pseudo" in cds.qualifiers, isolated)       # Filter for thoses with the pseudo annotation#
 
-        for feature in filter(lambda x: x.type == "CDS", record.features):
-            # First we check that we have that ID
-            row = None
+        psuedoIds = [getID(feature) for feature in psuedo]
+        return df.loc[(domain, genome, psuedoIds)]
 
-            if("protein_id" in feature.qualifiers): row = df.loc[genome][df.loc[genome]["id"] == feature.qualifiers["protein_id"][0]]
-            if("locus_tag" in feature.qualifiers):  row = df.loc[genome][df.loc[genome]["id"] == feature.qualifiers["locus_tag"][0]]
-
-            if(row.empty): continue
-
-            # This gene/feature is in our list so lets check it
-            if("pseudo" in feature.qualifiers):
-                row["genome"] = genome
-                isPseudo = pd.concat([isPseudo, row])
-    return isPseudo
-
-def findPseudo(path, df):
+def findPseudo(df):
     # Check which genes that we encountered are psuedo genes
-    from multiprocessing import Pool
-    import os, tqdm
+    return pd.concat(
+        Parallel.loadParallel(
+            __findPseudo, df.groupby(["domain", "genome"]),
+            count = len(df.index.get_level_values("genome").unique()),
+            desc = "Isolating pseudogenes"
+        )
+    )
 
-    with Pool(os.cpu_count()) as pool:
-        results = list(tqdm.tqdm(pool.imap(
-            __findPseudo, zip(
-                set(df.index.get_level_values(0)),
-                itertools.repeat(df),
-                itertools.repeat(path)
-            )
-        ), total=len(set(df.index.get_level_values(0)))))
-    return pd.concat(results)
+psuedo = findPseudo(isolated)
+psuedo = isolated.loc[psuedo.index.values]
 
-postPsuedo_archaea  = archaea[~archaea["id"].isin(findPseudo("data/genomes/archaea", archaea)["id"])]
-postPsuedo_bacteria = bacteria[~bacteria["id"].isin(findPseudo("data/genomes/bacteria", bacteria)["id"])]
+isolated["psuedo"] = isolated.isin(psuedo).any(axis=1)
 
-archaea.drop(["id_type", "id"], axis = 1, inplace = True)
-bacteria.drop(["id_type", "id"], axis = 1, inplace = True)
-postPsuedo_archaea.drop(["id_type", "id"], axis = 1, inplace = True)
-postPsuedo_bacteria.drop(["id_type", "id"], axis = 1, inplace = True)
+summary = pd.concat({
+    "w/ Psuedo": isolated.groupby("domain").sum(),
+    "w/o Psuedo": isolated[isolated.psuedo == False].groupby("domain").sum()
+}, names=["group"])
+summary["total genes"] = pd.concat({
+     "w/ Psuedo": isolated.groupby("domain").size(),
+     "w/o Psuedo": isolated[isolated.psuedo == False].groupby("domain").size()
+})
+summary = summary.drop(columns="psuedo").T
+summary.to_csv("data/qc/proteins/failed-summary.csv")
 
-print("Fails w/ Psuedo")
-print(pd.concat([pd.concat({
-        "Archaea":  (~archaea).sum(),
-        "Bacteria": (~bacteria).sum()
-    }, axis = 1), pd.DataFrame({
-        "Archaea":  [len(archaea)],
-        "Bacteria": [len(bacteria)]
-    }, index = ["total genes"])]
-))
-
-print("\nFails w/o Psuedo")
-print(pd.concat([pd.concat({
-        "Archaea":  (~postPsuedo_archaea).sum(),
-        "Bacteria": (~postPsuedo_bacteria).sum()
-    }, axis = 1), pd.DataFrame({
-        "Archaea":  [len(postPsuedo_archaea)],
-        "Bacteria": [len(postPsuedo_bacteria)]
-    }, index = ["total genes"])]
-))
+print("Non-conforming Summary")
+display(summary)

@@ -50,12 +50,20 @@ if __name__ == "__main__":
     Filesystem.mkdir("data/qc/trans_table/")
     Filesystem.mkdir("plot/qc/trans_table/")
 
-    archaea_tables = pd.DataFrame(dict(Filesystem.loadGlob("data/genomes/archaea/*", getTranslationTable, desc = "Checking Archaea Translation Tables"))).T
+    archaea_tables = pd.DataFrame(dict(Filesystem.loadGlob(
+        "data/genomes/archaea/*",
+        getTranslationTable,
+        desc = "Archaea Translation Tables"
+    ))).T
     archaea_tables.to_csv("data/qc/trans_table/archaea.csv")
     archaea_tables.count().plot(kind='bar', figsize=(6,6)).get_figure().savefig("plot/qc/trans_table/archaea.png")
     plotDistribution(archaea_tables).savefig("plot/qc/trans_table/archaea-distribution.png")
 
-    bacteria_tables = pd.DataFrame(dict(Filesystem.loadGlob("data/genomes/bacteria/*", getTranslationTable, desc = "Checking Bacteria Translation Tables"))).T
+    bacteria_tables = pd.DataFrame(dict(Filesystem.loadGlob(
+        "data/genomes/bacteria/*",
+        getTranslationTable,
+        desc = "Bacteria Translation Tables"
+    ))).T
     bacteria_tables.to_csv("data/qc/trans_table/bacteria.csv")
     bacteria_tables.count().plot(kind='bar', figsize=(19,6)).get_figure().savefig("plot/qc/trans_table/bacteria.png")
     plotDistribution(bacteria_tables).savefig("plot/qc/trans_table/bacteria-distribution.png")

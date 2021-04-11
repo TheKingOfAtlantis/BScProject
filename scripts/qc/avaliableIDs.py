@@ -8,6 +8,7 @@
 import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
 from common import Filesystem
+from tqdm.auto import tqdm
 
 import functools, collections, itertools
 
@@ -50,7 +51,11 @@ def shrinkGenomeIds(file, toFind):
     return ids
 
 if __name__ == "__main__":
-    idTypes = Filesystem.loadGlob("data/genomes/*/*.embl", shrinkGenomeIds, toFind=["CDS", "tRNA"], desc = "Checking ID usage")
+    idTypes = Filesystem.loadGlob(
+        "data/genomes/*/*.embl", shrinkGenomeIds,
+        toFind=["CDS", "tRNA"],
+        desc = "Checking ID usage"
+    )
 
     # Plan to find minimal set
     # 1) Count frequence of each Id types usage
@@ -68,11 +73,13 @@ if __name__ == "__main__":
     minimal = collections.OrderedDict()
     remains = list(itertools.chain.from_iterable(idTypes))
 
+    progress = tqdm(desc = "Minimising set of IDs")
     while len(remains) != 0:
         count = collections.Counter(itertools.chain.from_iterable(remains))
         minimal[count.most_common(1)[0][0]] = None
 
         remains = list(filter(lambda x: set(minimal.keys()).isdisjoint(x), remains))
+        progress.update()
 
     with open("data/qc/minIds.txt", "w") as file:
         file.write("\n".join(list(minimal.keys())))

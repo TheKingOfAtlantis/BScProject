@@ -1,8 +1,6 @@
 
 import itertools, more_itertools
 
-from multiprocessing import Pool
-from tqdm.auto import tqdm
 
 import pandas as pd
 
@@ -28,25 +26,42 @@ def getPool(jobCount = None, limit = None, **kwargs):
             limit    -- User defined limit on number of processes
             **kargs  -- Optional arguments to pass to Pool
     """
-    import os
-    processes = os.cpu_count() if(jobCount is None) else min(
-        os.cpu_count(),
-        jobCount
-    )
-    if(limit is not None):
-        processes = min(
-            processes,
-            limit
-        )
+    from multiprocessing import Pool
+    return Pool(processes = __processesCountHeuristic(jobCount, limit), **kwargs)
 
-    return Pool(processes = processes, **kwargs)
+def __processesCountHeuristic(jobCount = None, limit = None):
+    import os
+    count = os.cpu_count() if(jobCount is None) else min(os.cpu_count(), jobCount)
+    if(limit is not None): count = min(count, limit)
+    return count
+
+def __chunkSizeHeuristic(jobCount, limit = None):
+    # Iterables are split into chunks and feed to each process to then process
+    # The problem can go two ways:
+    #  1) Too small and each process incurs system call costs for retrieving the next batch
+    #     BUT jobs more efficinetly distributed (avoiding idle processes)
+    #  2) Too large and problems loading the data will occur
+    #     BUT avoids issues of receiving many small data packets
+
+    import math
+    processes = __processesCountHeuristic(jobCount, limit)
+
+    # If we have <1024 jobs or so per process => use default behaviour
+    # 10,000 => With our 40-cores = 40,000 jobs before we use our chunksize
+    if(jobCount/processes < 10000): return None
+    # We start with batches of 10,000 / 4
+    # Gently increase with job size such that we increase it by 10,000 / 4
+    # with each order of magitude increase
+    else: return math.floor(10000 * math.floor(math.log10(jobCount/processes) - 3) / 4)
+
 
 def loadParallel(callable, param, count = None, **tqdmParam):
+    from tqdm.auto import tqdm
     # Create a pool of process which are used to run operations on each file
     with getPool(count) as pool:
         # Check if we want to display the progress (using tqdm)
         result = list(tqdm(
-            pool.imap(callable, param),
+            pool.imap(callable, param, __chunkSizeHeuristic(count)),
             total=count, # Pass number of files to process
             **tqdmParam
         ))

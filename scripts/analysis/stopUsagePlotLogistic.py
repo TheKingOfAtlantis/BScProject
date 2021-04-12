@@ -28,3 +28,4 @@ for stop in ['TAA', 'TAG', 'TGA']:
 
     Filesystem.mkdir("plot/gc/cds/")
     plt.savefig(f"plot/gc/cds/human-logit-{stop}.png")
+    plt.close()

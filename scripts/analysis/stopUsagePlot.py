@@ -83,6 +83,7 @@ def plotGCvsFreq(name, freq, group, pdf = False):
         Filesystem.mkdir(f"plot/gc/{group}")
         fig.savefig(f"plot/gc/{group}/{name}-stop-shift{int(shift)}.png")
         if(pdf): fig.savefig(f"plot/gc/{group}/{name}-stop-shift{int(shift)}.pdf")
+        plt.close(fig)
 
 def load(file, group):
     name  = os.path.basename(file.name).split(".")[0]

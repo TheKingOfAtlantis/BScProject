@@ -12,8 +12,8 @@ import json, pathlib
 if __name__ == "__main__":
     Filesystem.mkdir("data/gc/")
 
-    archaea_gc = Filesystem.loadGlob("data/genomes/archaea/*", CalculateGC, desc = "Processing Archaea")
+    archaea_gc = Filesystem.loadGlob("data/genomes/archaea/*", CalculateGC, desc = "Archaea Genome GC")
     with open("data/gc/archaea.json", "w") as js: json.dump(archaea_gc, js)
 
-    bacteria_gc = Filesystem.loadGlob("data/genomes/bacteria/*", CalculateGC, desc = "Processing Bacteria")
+    bacteria_gc = Filesystem.loadGlob("data/genomes/bacteria/*", CalculateGC, desc = "Bacteria Genome GC")
     with open("data/gc/bacteria.json", "w") as js: json.dump(bacteria_gc, js)

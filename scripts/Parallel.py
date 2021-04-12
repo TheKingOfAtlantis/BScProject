@@ -35,6 +35,7 @@ def __processesCountHeuristic(jobCount = None, limit = None):
     if(limit is not None): count = min(count, limit)
     return count
 
+defaultChunkSize = 1000
 def __chunkSizeHeuristic(jobCount, limit = None):
     # Iterables are split into chunks and feed to each process to then process
     # The problem can go two ways:
@@ -43,16 +44,7 @@ def __chunkSizeHeuristic(jobCount, limit = None):
     #  2) Too large and problems loading the data will occur
     #     BUT avoids issues of receiving many small data packets
 
-    import math
-    processes = __processesCountHeuristic(jobCount, limit)
-
-    # If we have <1024 jobs or so per process => use default behaviour
-    # 10,000 => With our 40-cores = 40,000 jobs before we use our chunksize
-    if(jobCount/processes < 10000): return None
-    # We start with batches of 10,000 / 4
-    # Gently increase with job size such that we increase it by 10,000 / 4
-    # with each order of magitude increase
-    else: return math.floor(10000 * math.floor(math.log10(jobCount/processes) - 3) / 4)
+    return defaultChunkSize
 
 
 def loadParallel(callable, param, count = None, **tqdmParam):
@@ -61,7 +53,7 @@ def loadParallel(callable, param, count = None, **tqdmParam):
     with getPool(count) as pool:
         # Check if we want to display the progress (using tqdm)
         result = list(tqdm(
-            pool.imap(callable, param, __chunkSizeHeuristic(count)),
+            pool.imap(callable, param, chunksize = __chunkSizeHeuristic(count)),
             total=count, # Pass number of files to process
             **tqdmParam
         ))

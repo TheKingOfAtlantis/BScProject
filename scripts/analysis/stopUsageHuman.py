@@ -56,6 +56,15 @@ def processFeature(cds):
     return (feature.id, data) # Pair the data with the record ID
 
 Parallel.defaultChunkSize = 500
+
+def getAttributeKeys(cds): return set(cds.attributes.keys())
+attribKeys = Parallel.loadParallel(
+    getAttributeKeys, CDSs,
+    len(CDSs),
+    desc = "Checking CDSs in Human Genome"
+)
+attribKeys = set().union(*attribKeys)
+
 results = Parallel.loadParallel(
     processFeature, CDSs,
     len(CDSs),

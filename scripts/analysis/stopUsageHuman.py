@@ -44,6 +44,10 @@ def filterCDS(cds):
         if(attrib in cds.attributes):
             return None
 
+    # Strange occurance but some CDSs have the same start and end
+    # We'll drop these
+    if(cds.start == cds.end):
+        return None
     return cds
 def processFeature(cds):
     chromosome = next(filter(lambda x: x.id == cds.chrom, sequence))

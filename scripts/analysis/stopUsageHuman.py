@@ -33,11 +33,19 @@ CDSs = list(tqdm(
     total = annotation.count_features_of_type("CDS")
 ))
 
-def processFeature(cds):
-    if(cds.id.startswith("cds-XP")):
-        # Accessions starting with X*_ are predicted (we'll ignore these)
-        return
+def filterCDS(cds):
+    # Presence of these attributes means that they are true (checked that this is true)
+    toRemove = [
+        "pseudo", # We don't want pseudogenes => They don't code for anything
+        "partial" # Missing start or stop codons
+    ]
 
+    for attrib in toRemove:
+        if(attrib in cds.attributes):
+            return None
+
+    return cds
+def processFeature(cds):
     chromosome = next(filter(lambda x: x.id == cds.chrom, sequence))
     feature    = to_seqfeature(cds)
 
@@ -55,15 +63,14 @@ def processFeature(cds):
             })
     return (feature.id, data) # Pair the data with the record ID
 
-Parallel.defaultChunkSize = 500
-
-def getAttributeKeys(cds): return set(cds.attributes.keys())
-attribKeys = Parallel.loadParallel(
-    getAttributeKeys, CDSs,
+Parallel.defaultChunkSize = 1000
+CDSs = Parallel.loadParallel(
+    filterCDS, CDSs,
     len(CDSs),
     desc = "Checking CDSs in Human Genome"
 )
-attribKeys = set().union(*attribKeys)
+
+Parallel.defaultChunkSize = 500
 
 results = Parallel.loadParallel(
     processFeature, CDSs,

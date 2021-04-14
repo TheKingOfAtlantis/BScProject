@@ -48,7 +48,7 @@ def decompress(inputPath, isRetry = False):
     import gzip, shutil
     file = files[files.gzFile == inputPath].squeeze()
     try:
-        with gzip.open(file.gzFile, "rb") as srcFile,
+        with gzip.open(file.gzFile, "rb") as srcFile,\
                 open(file.gbFile, "wb") as dstFile:
                 shutil.copyfileobj(srcFile, dstFile)
     except Exception as e:
@@ -71,8 +71,8 @@ def convert(inputPath):
     from Bio import SeqIO
 
     file = files[files.gbFile == inputPath].squeeze()
-    with open(file.gbFile, "r") as srcFile,
-         open(file.emblFile, "w") as dstFile,
+    with open(file.gbFile, "r") as srcFile,\
+         open(file.emblFile, "w") as dstFile:
             SeqIO.convert(
                 srcFile, "genbank",
                 dstFile, "embl"
@@ -86,7 +86,7 @@ def rename(inputPath):
     import shutil
     file = files[files.emblFile == inputPath].squeeze()
     with open(file.emblFile, "r") as srcFile:
-        seq     = next(SeqIO.parse(inputFile, "embl"))
+        seq     = next(SeqIO.parse(srcFile, "embl"))
         dstPath = outDir + f"{file.domain}/{seq.id}.embl"
         # Parsing with BioPython means the file is at EOF
         # so we need to reset the file to the start

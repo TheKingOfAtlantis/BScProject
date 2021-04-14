@@ -27,33 +27,19 @@ def getPool(jobCount = None, limit = None, **kwargs):
             **kargs  -- Optional arguments to pass to Pool
     """
     from multiprocessing import Pool
-    return Pool(processes = __processesCountHeuristic(jobCount, limit), **kwargs)
-
-def __processesCountHeuristic(jobCount = None, limit = None):
-    import os
+        import os
     count = os.cpu_count() if(jobCount is None) else min(os.cpu_count(), jobCount)
     if(limit is not None): count = min(count, limit)
-    return count
-
-defaultChunkSize = 1000
-def __chunkSizeHeuristic(jobCount, limit = None):
-    # Iterables are split into chunks and feed to each process to then process
-    # The problem can go two ways:
-    #  1) Too small and each process incurs system call costs for retrieving the next batch
-    #     BUT jobs more efficinetly distributed (avoiding idle processes)
-    #  2) Too large and problems loading the data will occur
-    #     BUT avoids issues of receiving many small data packets
-
-    return defaultChunkSize
+    return Pool(processes = __processesCountHeuristic(jobCount, limit), **kwargs)
 
 
-def loadParallel(callable, param, count = None, **tqdmParam):
+def loadParallel(callable, param, count = None, chunkSize = 1, **tqdmParam):
     from tqdm.auto import tqdm
     # Create a pool of process which are used to run operations on each file
     with getPool(count) as pool:
         # Check if we want to display the progress (using tqdm)
         result = list(tqdm(
-            pool.imap(callable, param, chunksize = __chunkSizeHeuristic(count)),
+            pool.imap(callable, param, chunkSize),
             total=count, # Pass number of files to process
             **tqdmParam
         ))

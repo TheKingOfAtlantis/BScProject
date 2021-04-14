@@ -67,17 +67,17 @@ def processFeature(cds):
             })
     return (feature.id, data) # Pair the data with the record ID
 
-Parallel.defaultChunkSize = 1000
 CDSs = Parallel.loadParallel(
     filterCDS, CDSs,
     len(CDSs),
+    chunkSize = 1000
     desc = "Checking CDSs in Human Genome"
 )
 
-Parallel.defaultChunkSize = 500
 
 results = Parallel.loadParallel(
     processFeature, CDSs,
+    chunkSize = 500,
     len(CDSs),
     desc = "Stop Usage in Human Genome"
 )

@@ -6,8 +6,11 @@ if(get_ipython() != None):
     import os
     os.chdir("../..")
 
-import gffutils
 from common import Download, Parallel
+import gffutils
+import pandas as pd
+from tqdm.auto import tqdm
+
 
 # NCBI RefSeq has a lot of extra CDS annotated sequences which have very strange behaviours
 # Switching over to GENCODE dataset, tried the comprehensive annotations first for a bit,
@@ -43,8 +46,8 @@ def decompress(gzFile, out, **kwargs):
                 dstFile.write(byte)
                 progress.update(len(byte))
 
-decompress(gz_human_seq, fna_human_seq, desc = "Extracting Human Genome Sequence")
-decompress(gz_human_annotation, gff3_human_annotation, desc = "Extracting Human Genome Annotation")
+decompress(gz_human_seq, fna_human_seq, desc = "Decompressing Human Genome Sequence")
+decompress(gz_human_annotation, gff3_human_annotation, desc = "Decompressing Human Genome Annotation")
 
 print("Creating Human Annotation Database: This takes a while")
 annotations = gffutils.create_db(
@@ -57,9 +60,8 @@ annotations = gffutils.create_db(
     keep_order     = True,
     disable_infer_genes = True, disable_infer_transcripts = True
 )
-print("Creating Human Annotation Database: Done")
 
-import pandas as pd
+print("Creating Human Annotation Database: Annotation Tables Extension")
 
 gffutils.constants.always_return_list = False
 
@@ -70,30 +72,185 @@ gffutils.constants.always_return_list = False
 
 # For reference: http://daler.github.io/gffutils/database-schema.html
 
-from tqdm.auto import tqdm
+# To enable queries totally within SQLite (for faster execution) we need
+# to extract the avaliable attributes and embedded them within the SQLite database
+# This doesn't effect the existing information produced by gffutils, as these
+# stored in seperate tables and the original tables are left untouched
 
-# Get all the CDSs which are protein_coding
+def isolateAttribute(feature):
+    def extractAttribute(attributes, name):
+        return attributes[name] if name in attributes else None
+    return {
+       "ID":                       feature.id,
+       "Parent":                   extractAttribute(feature.attributes, "Parent"),
+       "ccdsid":                   extractAttribute(feature.attributes, "ccds"),
+       "gene_id":                  extractAttribute(feature.attributes, "gene_id"),
+       "gene_type":                extractAttribute(feature.attributes, "gene_type"),
+       "gene_name":                extractAttribute(feature.attributes, "gene_name"),
+       "level":                    extractAttribute(feature.attributes, "level"),
+       "hgnc_id":                  extractAttribute(feature.attributes, "hgnc_id"),
+       "havana_gene":              extractAttribute(feature.attributes, "havana_gene"),
+       "transcript_id":            extractAttribute(feature.attributes, "transcript_id"),
+       "transcript_type":          extractAttribute(feature.attributes, "transcript_type"),
+       "transcript_name":          extractAttribute(feature.attributes, "transcript_name"),
+       "transcript_support_level": extractAttribute(feature.attributes, "transcript_support_level"),
+       "havana_transcript":        extractAttribute(feature.attributes, "havana_transcript"),
+       "exon_number":              extractAttribute(feature.attributes, "exon_number"),
+       "exon_id":                  extractAttribute(feature.attributes, "exon_id")
+    }
 
-CDSs = [
-    CDS for CDS in tqdm(
-        annotations.features_of_type("CDS"),
-        total = annotations.count_features_of_type("CDS")
-    ) if CDS.attributes["transcript_type"] == "protein_coding"
-]
+def isolateLists(feature, name):
+    return [{
+        "featureId": feature.id,
+        "ordering": i,
+        "value": val,
+    } for i,val in enumerate(feature.attributes[name])]
 
-# Then group the CDSs by gene
-pairs = dict.fromkeys(set([ CDS.attributes["gene_id"] for CDS in CDSs ]), [])
-for CDS in CDSs:
-    pairs[CDS.attributes["gene_id"]].append(CDS)
 
-# Then select the best cds from each gene
+with annotations.conn as connection:
+    # Create the attribute tables
+    def listTable(name): return f"""
+        CREATE TABLE IF NOT EXISTS {name} (
+            featureId TEXT,
+            ordering INT,
+            value TEXT,
+            PRIMARY KEY (featureId, ordering),
+            FOREIGN KEY (featureId) REFERENCES features(id)
+        );
+        """
+    connection.executescript(
+        f"""
+        CREATE TABLE IF NOT EXISTS attributes (
+            id TEXT,
+            ccdsid TEXT,
+            gene_id TEXT,
+            gene_type TEXT,
+            gene_name TEXT,
+            level TEXT,
+            hgnc_id TEXT,
+            havana_gene TEXT,
+            Parent TEXT,
+            transcript_id TEXT,
+            transcript_type TEXT,
+            transcript_name TEXT,
+            transcript_support_level TEXT,
+            havana_transcript TEXT,
+            exon_number TEXT,
+            exon_id TEXT,
+            PRIMARY KEY (id),
+            FOREIGN KEY (id) REFERENCES features(id)
+        );
+        {listTable("tags")}
+        {listTable("ont")}
+        """
+    )
 
-def selectCDS(x):
-    gene, CDSs = x
-    CDSs = sorted(CDSs, key = lambda x: x.end - x.start)
-    return (gene, CDSs[0])
+    attributesList = []
+    tagsList = []
+    ontList = []
 
-final = dict(Parallel.loadParallel(
-    selectCDS, pairs.items(),
-    len(pairs)
-))
+    # Extract the attributes
+    for feature in tqdm(
+        annotations.all_features(),
+        total = annotations.count_features_of_type()
+        desc  = "Extracting attribute information"
+    ):
+        attributesList.append(isolateAttribute(feature))
+        if("tag" in feature.attributes): tagsList.extend(isolateLists(feature, "tag"))
+        if("ont" in feature.attributes): ontList.extend(isolateLists(feature, "ont"))
+
+    print("Creating attribute tables")
+    # Insert the attributes
+    connection.executemany(
+        """
+        INSERT INTO attributes VALUES (
+            :ID,
+            :ccdsid,
+            :gene_id,
+            :gene_type,
+            :gene_name,
+            :level,
+            :hgnc_id,
+            :havana_gene,
+            :Parent,
+            :transcript_id,
+            :transcript_type,
+            :transcript_name,
+            :transcript_support_level,
+            :havana_transcript,
+            :exon_number,
+            :exon_id
+        );
+        """, attributesList
+    )
+    connection.executemany(
+        """
+        INSERT INTO tags VALUES (
+            :featureId,
+            :ordering,
+            :value
+        );
+        """, tagsList
+    )
+    connection.executemany(
+        """
+        INSERT INTO ont VALUES (
+            :featureId,
+            :ordering,
+            :value
+        );
+        """, ontList
+    )
+
+print("Creating Human Annotation Database: Done")
+
+# Brief explaination of this SQL query:
+# ------------------------------------
+# We want to find the ID of the longest CDS in each gene to store it for
+# downstream analysis
+#
+# The gffutils relations table stores this hierarchical information but
+# nothing else. To find out information about what those IDs refer to, we
+# find the relevent features and attribute table rows (for both parent and
+# child) and use these to filter the results to include children which are
+# CDSs with the protein_coding transcript type (thus removing psuedo genes
+# and the like). We then need to specify that of these only pick those whose
+# parent is a gene (the relations table keeps an entry for each possible
+# hierarchical connection)
+#
+# Finally, once we have our list of protein coding CDS and gene pairings, we
+# group the CDSs by gene, using the CDS start and end columns to determine
+# the length and selecting the attribute with the longest sequence
+#
+query = """
+    SELECT DISTINCT
+        relations.parent,
+        relations.child,
+        MAX(childFeat.end - childFeat.start) AS length
+    FROM
+        relations
+        INNER JOIN features childFeat      ON childFeat.id    == relations.child
+        INNER JOIN features parentFeat     ON parentFeat.id   == relations.parent
+        INNER JOIN attributes childAttrib  ON childAttrib.id  == relations.child
+        INNER JOIN attributes parentAttrib ON parentAttrib.id == relations.parent
+    WHERE
+        childFeat.featuretype       == "CDS" AND
+        parentFeat.featuretype      == "gene" AND
+        childAttrib.transcript_type == "protein_coding"
+    GROUP BY relations.parent
+"""
+
+# We count the number of results we will get (for tqdm)
+# Then we extract these values
+count  = annotations.execute(f"SELECT COUNT() FROM ({query})").fetchone()[0]
+result = annotations.execute(query)
+
+result = [ dict(res) for res in tqdm(
+    result,
+    total = count,
+    desc  = "Extracting Representative CDS IDs"
+) ]
+result = pd.DataFrame.from_records(result)
+result.columns = ["gene", "cds", "length"]
+
+result.to_csv("data/qc/proteins/human.csv")

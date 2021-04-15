@@ -56,6 +56,41 @@ def filterCDS(cds):
         return None
 
     return cds
+
+def produceCDSPosition(cds):
+    # CDS position span the region which contains the CDS
+    # However this may contain multiple introns/exons
+    # So we need to find the position of all introns it contains
+    # and join them
+    db = gffutils.FeatureDB("data/genomes/GRCh38_latest_genomic.gff3.sqlite")
+    exons = db.region(cds, featuretype="exon")
+
+    positions = [{
+        "start":  exon.start,
+        "end":    exon.end,
+        "strand": exon.strand
+    } for exon in exons]
+
+    for pos in positions:
+        if(pos["strand"] == "+"):   pos["strand"] = +1
+        elif(pos["strand"] == "-"): pos["strand"] = -1
+        elif(pos["strand"] == "?"): pos["strand"] = 0
+        else: pos["strand"] = None
+
+    from operator import itemgetter
+    positions = sorted(positions, key=itemgetter("start"))
+
+    # The start of the CDS will be contained w/i a exon
+    # So we limit the start of the first exon to start w/ the CDS
+    # Similarly end will be contained w/i the last exon
+    positions[0]["start"] = cds.start
+    positions[-1]["end"]  = cds.end
+
+    from Bio.SeqFeature import FeatureLocation, CompoundLocation
+    return FeatureLocation(**positions[0]) if len(positions) == 1 else CompoundLocation([
+        FeatureLocation(**pos) for pos in positions
+    ])
+
 def processFeature(cds):
     chromosome = sequence[cds.chrom]
     feature    = to_seqfeature(cds)

@@ -22,10 +22,11 @@ from tqdm.auto import tqdm
 gffutils.constants.always_return_list = False
 
 annotation = gffutils.FeatureDB("data/genomes/GRCh38_latest_genomic.gff3.sqlite")
-sequence = list(tqdm(
+sequence = {seq.id:seq for seq in tqdm(
     SeqIO.parse("data/genomes/GRCh38_latest_genomic.fna", "fasta"),
     desc = "Loading FASTA Sequences"
-))
+)}
+
 # Select for CDSs and process
 CDSs = list(tqdm(
     annotation.features_of_type("CDS"),
@@ -33,6 +34,7 @@ CDSs = list(tqdm(
     total = annotation.count_features_of_type("CDS")
 ))
 
+mitochondrialGenomes = [id for id,seq in sequence.items() if "mitochondrion" in seq.description]
 def filterCDS(cds):
     # Presence of these attributes means that they are true (checked that this is true)
     toRemove = [
@@ -48,15 +50,32 @@ def filterCDS(cds):
     # We'll drop these
     if(cds.start == cds.end):
         return None
+
+    # Removing mitochondrial genomes from our list
+    if(cds.seqid in mitochondrialGenomes):
+        return None
+
     return cds
 def processFeature(cds):
-    chromosome = next(filter(lambda x: x.id == cds.chrom, sequence))
+    chromosome = sequence[cds.chrom]
     feature    = to_seqfeature(cds)
+    location   = feature.location
 
     data = []
+    correction = 0
     for shift in range(0, 6):
-        loc = feature.location + shift # Add the shift the "in-frame" ORF location
-        seq = loc.extract(chromosome.seq)  # Extract the DNA sequence using the location
+        # Some inconsistency w/ CDSs
+        # Stop codon is contained in the sequences of some but not all
+        #
+        # So we check, if in the in-frame shift there is no stop codon then we
+        # hopefully correct for this by shifting 1 codon along
+        if(shift == 0):
+            seq = location.extract(chromosome.seq)
+            if seq[-3:] not in ["TAA", "TGA", "TAG"]:
+                correction += 3
+
+        loc = location + shift + correction # Add the shift to the "in-frame" ORF location
+        seq = loc.extract(chromosome.seq)   # Extract the DNA sequence using the location
 
         # Need to ensure we have a stop codon, otherwise we don't care
         if seq[-3:] in ["TAA", "TGA", "TAG", "TAC"]:

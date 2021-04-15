@@ -37,12 +37,17 @@ def __requestFile(method, url, file, **tqdmParams):
             for data in response.iter_content(block_size):
                 progress.update(len(data))
                 file.write(data)
+
+        return file_size
     except Exception as e:
         with open(errPath, "a") as err:
             err.write(f"{url} failed with {e}")
+        return 0
+
 def __processRequest(x):
     (method, url, pos, tqdmParams) = x
     return __request(method, url, pos, **tqdmParams)
+
 def __processFileRequest(x):
     (method, url, file, pos, tqdmParams) = x
 
@@ -93,21 +98,20 @@ def getFile(urls, paths, limit = None, description = None, **tqdmParams):
     # If we were given a string then we only have 1 url to get
     # So we don't need to parallelise it
     if(isinstance(urls, str)):
-        __requestFile(requests.get, urls, paths, **tqdmParams)
-    else:
-        with getPool(len(urls), limit) as pool: list(tqdm(
-            pool.imap(
-                __processFileRequest, zip(
-                    itertools.repeat(requests.get),
-                    urls, paths,
-                    range(len(urls)),
-                    itertools.repeat(tqdmParams)
-                )
-            ),
-            desc     = description,
-            total    = len(urls),
-            position = 0
-        ))
+        return __requestFile(requests.get, urls, paths, **tqdmParams)
+    with getPool(len(urls), limit) as pool: return list(tqdm(
+        pool.imap(
+            __processFileRequest, zip(
+                itertools.repeat(requests.get),
+                urls, paths,
+                range(len(urls)),
+                itertools.repeat(tqdmParams)
+            )
+        ),
+        desc     = description,
+        total    = len(urls),
+        position = 0
+    ))
 
 def post(urls, limit = None, description = None, **tqdmParams):
 

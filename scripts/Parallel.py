@@ -27,7 +27,7 @@ def getPool(jobCount = None, limit = None, **kwargs):
             **kargs  -- Optional arguments to pass to Pool
     """
     from multiprocessing import Pool
-        import os
+    import os
     count = os.cpu_count() if(jobCount is None) else min(os.cpu_count(), jobCount)
     if(limit is not None): count = min(count, limit)
     return Pool(processes = __processesCountHeuristic(jobCount, limit), **kwargs)

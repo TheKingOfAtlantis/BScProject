@@ -30,7 +30,7 @@ def getPool(jobCount = None, limit = None, **kwargs):
     import os
     count = os.cpu_count() if(jobCount is None) else min(os.cpu_count(), jobCount)
     if(limit is not None): count = min(count, limit)
-    return Pool(processes = __processesCountHeuristic(jobCount, limit), **kwargs)
+    return Pool(processes = count, **kwargs)
 
 
 def loadParallel(callable, param, count = None, chunkSize = 1, **tqdmParam):

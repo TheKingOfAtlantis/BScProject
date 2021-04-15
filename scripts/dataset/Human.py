@@ -7,7 +7,7 @@ if(get_ipython() != None):
     os.chdir("../..")
 
 import gffutils
-from common import Download
+from common import Download, Parallel
 
 # NCBI RefSeq has a lot of extra CDS annotated sequences which have very strange behaviours
 # Switching over to GENCODE dataset, tried the comprehensive annotations first for a bit,
@@ -47,7 +47,7 @@ decompress(gz_human_seq, fna_human_seq, desc = "Extracting Human Genome Sequence
 decompress(gz_human_annotation, gff3_human_annotation, desc = "Extracting Human Genome Annotation")
 
 print("Creating Human Annotation Database: This takes a while")
-gffutils.create_db(
+annotations = gffutils.create_db(
     force   = True,
     verbose = True,
     data    = gff3_human_annotation,
@@ -58,3 +58,42 @@ gffutils.create_db(
     disable_infer_genes = True, disable_infer_transcripts = True
 )
 print("Creating Human Annotation Database: Done")
+
+import pandas as pd
+
+gffutils.constants.always_return_list = False
+
+# **Rational**
+# We want to pick the most representative CDS for each gene
+# much like with the largest genome of each genus for prokaryotes
+# to avoid genes with many CDSs potentially weighing the results down
+
+# For reference: http://daler.github.io/gffutils/database-schema.html
+
+from tqdm.auto import tqdm
+
+# Get all the CDSs which are protein_coding
+
+CDSs = [
+    CDS for CDS in tqdm(
+        annotations.features_of_type("CDS"),
+        total = annotations.count_features_of_type("CDS")
+    ) if CDS.attributes["transcript_type"] == "protein_coding"
+]
+
+# Then group the CDSs by gene
+pairs = dict.fromkeys(set([ CDS.attributes["gene_id"] for CDS in CDSs ]), [])
+for CDS in CDSs:
+    pairs[CDS.attributes["gene_id"]].append(CDS)
+
+# Then select the best cds from each gene
+
+def selectCDS(x):
+    gene, CDSs = x
+    CDSs = sorted(CDSs, key = lambda x: x.end - x.start)
+    return (gene, CDSs[0])
+
+final = dict(Parallel.loadParallel(
+    selectCDS, pairs.items(),
+    len(pairs)
+))

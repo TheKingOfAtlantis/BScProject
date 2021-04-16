@@ -69,7 +69,6 @@ if __name__ == "__main__":
     # With the first able to address the most - Order will be used to determine
     # in what order to check for each ID
 
-    print("Determining minimum ID set")
     minimal = collections.OrderedDict()
     remains = list(itertools.chain.from_iterable(idTypes))
 

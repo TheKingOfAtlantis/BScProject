@@ -253,4 +253,4 @@ result = [ dict(res) for res in tqdm(
 result = pd.DataFrame.from_records(result)
 result.columns = ["gene", "cds", "length"]
 
-result.to_csv("data/qc/proteins/human.csv")
+result.to_csv("data/qc/proteins/human.csv", index=False)

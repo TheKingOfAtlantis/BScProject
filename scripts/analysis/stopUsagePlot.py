@@ -20,12 +20,12 @@ def loadDataFrame(file):
     # We want to sort and bin the human genome
     if(pathlib.Path(file.name).stem == "human"):
         # Sort and bin
+        bins = 100
         df = df.sort_values(by=["gc3"])
         df = pd.concat(
-            np.array_split(df, 100),
-            keys=[f"Human-${x}" for x in range(100)]
+            np.array_split(df, bins),
+            keys=[f"Human-${x}" for x in range(bins)]
         )
-
 
     return df.reset_index().rename(columns={"level_0": "id"}).drop("level_1", axis=1)
 
@@ -95,5 +95,5 @@ def load(file, group):
     plotGCvsFreq(name, calculateFreq(noTAC), group + "+TAG")
 
 if __name__ in "__main__":
-    Filesystem.loadGlob("data/gc/cds/*.json", load, group="cds", desc="Plotting CDS Data")
+    Filesystem.loadGlob("data/gc/cds/*.json",  load, group="cds",  desc="Plotting CDS Data")
     Filesystem.loadGlob("data/gc/trna/*.json", load, group="trna", desc="Plotting tRNA Data")

@@ -91,6 +91,7 @@ def load(file, group):
     noTAG = df[df["stop"] != "TAG"].copy() # Drop TAG => TAA, TGA & TAC
     noTAC = df[df["stop"] != "TAC"].copy() # Drop TAG => TAA, TGA & TAG
 
+    plotGCvsFreq(name, calculateFreq(df),    group)
     plotGCvsFreq(name, calculateFreq(noTAG), group + "+TAC")
     plotGCvsFreq(name, calculateFreq(noTAC), group + "+TAG")
 

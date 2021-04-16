@@ -11,27 +11,38 @@ human = human[["shift", "stop", "gc3"]]
 
 human = human.reset_index().rename(columns={"level_0": "id"}).drop("level_1", axis=1)
 
-codons = ['TAA', 'TGA', 'TAG']
-fig, axes = plt.subplots(nrows = len(codons), figsize = (16, 9), sharex=True)
-for ax, stop in zip(axes, codons):
+regression = {}
+for stop in  ['TAA', 'TGA', 'TAG', "TAC"]:
+    print(f"Stop {stop}:")
     data = pd.DataFrame({
         "x": human.gc3,
         "y": human.stop == stop # Whether each CDS has the stop we are checking for
     })
+    regression[codon] = sm.Logit(data.y, sm.add_constant(data.x)).fit()
+    print(regression[codon].summary())
 
-    print(f"Stop {stop}:")
+def createPlot(codons, file):
+    fig, axes = plt.subplots(nrows = len(codons), figsize = (16, 9), sharex=True)
+    for ax, stop in zip(axes, codons):
+        data = pd.DataFrame({
+            "x": human.gc3,
+            "y": human.stop == stop # Whether each CDS has the stop we are checking for
+        })
 
-    # Log logisitic regression curve
-    fit = sm.Logit(data.y, sm.add_constant(data.x)).fit()
-    predict_line = np.linspace(data.x.min(), data.x.max())
-    ax.plot(predict_line, fit.predict(sm.add_constant(predict_line)), "-")
+        # Log logisitic regression curve
+        fit = regression[stop]
+        predict_line = np.linspace(data.x.min(), data.x.max())
+        ax.plot(predict_line, fit.predict(sm.add_constant(predict_line)), "-")
 
-    ax.set_ylabel(f"{stop} Used")
+        ax.set_ylabel(f"{stop} Used")
 
-    ax.set_yticks([0, 1])
-    ax.set_yticklabels(["False", "True"])
+        ax.set_yticks([0, 1])
+        ax.set_yticklabels(["False", "True"])
 
-    print(fit.summary2())
+    axes[-1].set_xlabel("Gene GC3 Content (%)")
+    plt.savefig(file)
+    plt.close()
 
-axes[-1].set_xlabel("Gene GC3 Content (%)")
-plt.savefig(f"plot/gc/cds-human-logit.png")
+createPlot(codons = ['TAA', 'TGA', 'TAG', "TAC"], file = "plot/gc/cds-human-logit-all.png")
+createPlot(codons = ['TAA', 'TGA', 'TAG'],        file = "plot/gc/cds-human-logit-TAG.png")
+createPlot(codons = ['TAA', 'TGA', 'TAC'],        file = "plot/gc/cds-human-logit-TAC.png")

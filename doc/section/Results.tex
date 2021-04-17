@@ -1,10 +1,20 @@
 % !TeX root = ../main.tex
 \documentclass[../main.tex]{subfile}
 \begin{document} \section{Results}
-    \subsection{Is pattern maintained when controlled for phylogeny?}
-    \subsection{What pattern do out-of-frame stop codons follow?}
-    \subsection{Do these patterns hold for ncRNA (tRNA + rRNA)?
-                As stop codons not used (not read by ribosome)}
-    \subsection{Does the patterns seen extend to Eukaryotes and Archaea?
-                As they utilise a single termination factor}
+    \subsection{Underutilisation of TAG is Independent of Bacterial Phylogeny}
+        The dataset utilised by \autocite{PLACEHOLDER} for their analysis of stop codon usage in bacteria, while comprehensive (encompassing \num{0000} genomes), could potentially be effected by genera with larger sample sizes. Genomes within a genus are more akin to one another and as such have similar stop codon usage. This potentially means that the the underutilisation of TAG could have arisen from the overrepresentation of genomes of a particular genus which (for one reason or another) under-utilise TAG rather than arising from the RF1:RF2 hypothesis mechanism.
+
+        A phylogenetically controlled dataset was used (which selected the largest genome of each genus) and was  derived from the representative assemblies from the RefSeq database. This removed the potential for the oversampling of phylogenetically similar genomes. After filtering out non-conforming CDS features from each genome, the usage of each stop codon was collated along with the GC3 content of the genes. The relative usage of each stop codon and the average GC3 content of the associated genes was determined for each genome, this was then plotted as shown in \cref{fig:stopUsage/bacteria}. Even under phylogenetic control, the stop codon usage pattern persists, with the usage of TAG remaining relatively low, at \SI{20}{\percent} utilisation, and independent of GC3 content.
+
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=.95\linewidth]{../plot/gc/cds+TAG/bacteria-stop-shift0.png}
+            \caption{%
+                Average GC3 content (\%) of genes against the utilisation of each stop codon (\%) of each bacterial genome within the phylogenetically controlled dataset
+            }
+            \label{fig:stopUsage/bacteria}
+        \end{figure}
+
+        With the phylogenetically controlled dataset able to reproduce the stop codon utilisation pattern, its clear that the results by \autocite{PLACEHOLDER} did not arise from oversampling, but from some underlying mechanism which drives the utilisation of TAG across bacteria. With this dataset it should be able to explore whether the RF1:RF2 hypothesis holds true within other contexts.
+
 \end{document}

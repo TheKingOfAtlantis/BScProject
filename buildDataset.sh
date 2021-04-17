@@ -5,12 +5,10 @@ headerend=$(tput sgr0)
 
 set -e
 
-if [ ! -f "./data/taxadb.sqlite" ]; then
-    echo
-    echo ${header} Building Taxa Database ${headerend}
-    echo
-    bash ./buildTaxa.sh
-fi
+echo
+echo ${header} Building Taxa Database ${headerend}
+echo
+bash ./buildTaxa.sh
 
 echo
 echo ${header} Building Prokaryote Dataset${headerend}

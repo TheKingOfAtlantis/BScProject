@@ -20,8 +20,7 @@ GbDir       = intermDir + "gb/"
 EmblDir     = intermDir + "embl/"
 outDir      = buildDir  + "out/"
 
-fileSuffix = "_genomic.gbff.gz"
-
+# Maps NCBI taxanomic ID of each domain to a name
 domainMap = { 2: "bacteria",  2157: "archaea"}
 
 files = pd.DataFrame()
@@ -29,7 +28,7 @@ files["accession"] = filtered.accession_refseq
 files["domain"]    = filtered.superkingdom.map(domainMap)
 files["url"]       = (
     "https://ftp.ncbi.nlm.nih.gov/genomes" + filtered.link + "/" + # Url to the assembly directory
-    filtered.link.str.split("/").str[-1] + fileSuffix              # File to retrieve in the directory
+    filtered.link.str.split("/").str[-1] + "_genomic.gbff.gz"      # File to retrieve in the directory
 )
 files["gzFile"]    = downloadDir + files.accession + ".gbff.gz"
 files["gbFile"]    = GbDir       + files.accession + ".gbff"
@@ -93,6 +92,11 @@ def rename(inputPath):
         srcFile.seek(0, 0)
         with open(dstPath, "w") as dstFile:
             shutil.copyfileobj(srcFile, dstFile)
+    return {
+        "domain": file.domain,
+        "accession_original": files.accession,
+        "accession_renamed":  seq.id
+    }
 
 # We can now download all the files
 Download.getFile(
@@ -116,8 +120,13 @@ Parallel.loadParallel(
 )
 
 # Rename to sequence accession ID
-Parallel.loadParallel(
+map = Parallel.loadParallel(
     rename, files.emblFile,
     len(files),
     desc = "Renaming files to use Accession ID"
 )
+
+# This file is serves no functional purpose within the codebase (not even used to rebuild the same dataset)
+# Instead provides a list, for those interested, of the genomes used and where they can be found
+import pandas as pd
+pd.DataFrame.from_dict(map).to_csv(outDir + "file_mapping.csv", index=False)

@@ -1,4 +1,6 @@
-cd data
-taxadb download -t taxa -o taxadb
-taxadb create -d taxa -i taxadb -n taxadb.sqlite
-rm -r taxadb
+
+mkdir -p data/genomes/build
+cd data/genomes/build
+
+taxadb download -t taxa -o download/taxadb/
+taxadb create -d taxa -i download/taxadb/ -n taxadb.sqlite

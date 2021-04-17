@@ -6,7 +6,7 @@ if(get_ipython() != None):
     import os
     os.chdir("../..")
 
-from common import Download, Parallel
+from common import Download, Parallel, Filesystem
 import gffutils
 import pandas as pd
 from tqdm.auto import tqdm
@@ -152,14 +152,14 @@ with annotations.conn as connection:
     # Extract the attributes
     for feature in tqdm(
         annotations.all_features(),
-        total = annotations.count_features_of_type()
+        total = annotations.count_features_of_type(),
         desc  = "Extracting attribute information"
     ):
         attributesList.append(isolateAttribute(feature))
         if("tag" in feature.attributes): tagsList.extend(isolateLists(feature, "tag"))
         if("ont" in feature.attributes): ontList.extend(isolateLists(feature, "ont"))
 
-    print("Creating attribute tables")
+    print("Creating Attribute Tables")
     # Insert the attributes
     connection.executemany(
         """
@@ -253,4 +253,5 @@ result = [ dict(res) for res in tqdm(
 result = pd.DataFrame.from_records(result)
 result.columns = ["gene", "cds", "length"]
 
+Filesystem.mkdir("data/qc/proteins/")
 result.to_csv("data/qc/proteins/human.csv", index=False)

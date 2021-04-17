@@ -12,7 +12,7 @@ from common import Parallel
 
 def getDB():
     from taxadb.taxid import TaxID
-    return TaxID(dbtype='sqlite', dbname='data/taxadb.sqlite')
+    return TaxID(dbtype='sqlite', dbname='data/genomes/build/taxadb.sqlite')
 
 def getLineage(taxid):
     taxaDB = getDB()

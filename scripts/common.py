@@ -12,8 +12,11 @@ import Parallel
 import Filesystem
 import Download
 
-with open("data/qc/minIds.txt") as file:
-    __minimalSet = [id for id in file]
+__minimalSet = []
+import os
+if(os.path.exists("data/qc/minIds.txt")):
+    with open("data/qc/minIds.txt") as file:
+        __minimalSet = [id for id in file]
 
 def getID(record):
     for idType in __minimalSet:

@@ -4,6 +4,10 @@
 # - Check no internal stop codons
 # - Check ends with a stop codon
 
+import sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
+from common import Filesystem, getID
+
 from Bio import SeqIO
 from Bio.Data import CodonTable
 
@@ -51,27 +55,31 @@ def internalCheck(seq, feature):
             return False
     return True
 
-def check(file):
+def __performCheck(file):
     ''' Collects the results of all the checks '''
     record = next(SeqIO.parse(file, "embl"))
-    return (record.id, [{
-        "position": i, # Position in filtered features list (to find culprits)
+    return (record.id, pd.DataFrame([{
+        "id":       getID(feature),                     # Retrieves a suitable ID for identifying the gene
         "length":   lengthCheck(feature),               # Result of checking length of sequence (If sequence multiple of three == True)
         "start":    startCheck(record.seq, feature),    # Result of checking start is start codon (If start wtih start == True)
         "end":      endCheck(record.seq, feature),      # Result of checking end is stop codon (If ends with stop == True)
         "internal": internalCheck(record.seq, feature), # Result of checking for internal stop codons (If none found == True)
-    } for i, feature in enumerate(filter(lambda x: x.type in "CDS", record.features))])
+    } for feature in filter(lambda x: x.type in "CDS", record.features)]))
 
+def performCheck(pattern, **kwargs):
+    data = pd.concat(dict(Filesystem.loadGlob(pattern, __performCheck, **kwargs)))
+    data = data.droplevel(1)\
+               .set_index("id", append=True)\
+               .rename_axis(index=["genome", "id"])
+    return data
 
 if __name__ == "__main__":
-    from common import loadGlob
     import pandas as pd
-    import itertools, pathlib, json
 
-    pathlib.Path("data/qc/proteins/").mkdir(parents=True, exist_ok=True)
+    Filesystem.mkdir("data/qc/proteins/")
 
-    result = dict(loadGlob("data/genomes/archaea/*", check))
-    with open("data/qc/proteins/archaea.json", "w") as file: json.dump(result, file)
+    result = performCheck("data/genomes/archaea/*", desc = "Checking Archaea CDSs")
+    result.to_json("data/qc/proteins/archaea.json", orient = "table")
 
-    result = dict(loadGlob("data/genomes/bacteria/*", check))
-    with open("data/qc/proteins/bacteria.json", "w") as file: json.dump(result, file)
+    result = performCheck("data/genomes/bacteria/*", desc = "Checking Bacteria CDSs")
+    result.to_json("data/qc/proteins/bacteria.json", orient = "table")

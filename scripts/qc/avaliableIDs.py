@@ -5,6 +5,11 @@
 #  - Shrink the list available in each genome down (w/i the seperate processes)
 #  - Shrink the list available across all genomes
 
+import sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
+from common import Filesystem
+from tqdm.auto import tqdm
+
 import functools, collections, itertools
 
 def pullGeneIds(feature):
@@ -16,12 +21,20 @@ def pullGeneIds(feature):
 
     if("locus_tag" in qualifiers):  idTypes.append("locus_tag")
     if("protein_id" in qualifiers): idTypes.append("protein_id")
+    if("gene" in qualifiers): idTypes.append("gene")
     if("db_xref" in qualifiers):
         # With external refs need to seperate ID from ID type
         for id in qualifiers["db_xref"]:
-            idTypes.append(id.split(":")[0])
+            idTypes.append("db_xref:" + id.split(":")[0])
 
-    return set(idTypes) # Keep as set so have unique set of ID types
+    if(idTypes == []):
+        idTypes.extend(list(qualifiers.keys()))
+
+    # We can't really use the "note" qualifier as an ID
+    if("note" in idTypes):
+        idTypes.remove("note")
+
+    return set(idTypes) # Return as set type to ensure we unique set of ID types
 
 def shrinkGenomeIds(file, toFind):
     # First we store everything we get (even repeats)
@@ -29,11 +42,20 @@ def shrinkGenomeIds(file, toFind):
     from Bio import SeqIO
 
     record = next(SeqIO.parse(file, "embl"))
-    return [pullGeneIds(feature) for feature in filter(lambda x: x.type in toFind, record.features)]
 
-from common import loadGlob
+    ids = []
+    for feature in filter(lambda x: x.type in toFind, record.features):
+        res = pullGeneIds(feature)
+        if(res == set()): print(record.id, feature)
+        else: ids.append(res)
+    return ids
+
 if __name__ == "__main__":
-    idTypes = loadGlob("data/genomes/*/*.embl", shrinkGenomeIds, extra=["CDS"])
+    idTypes = Filesystem.loadGlob(
+        "data/genomes/*/*.embl", shrinkGenomeIds,
+        toFind=["CDS", "tRNA"],
+        desc = "Checking ID usage"
+    )
 
     # Plan to find minimal set
     # 1) Count frequence of each Id types usage
@@ -46,12 +68,17 @@ if __name__ == "__main__":
     # Use the order to keep record of how many elements can be addressed
     # With the first able to address the most - Order will be used to determine
     # in what order to check for each ID
+
     minimal = collections.OrderedDict()
     remains = list(itertools.chain.from_iterable(idTypes))
 
+    progress = tqdm(desc = "Minimising set of IDs")
     while len(remains) != 0:
         count = collections.Counter(itertools.chain.from_iterable(remains))
         minimal[count.most_common(1)[0][0]] = None
 
         remains = list(filter(lambda x: set(minimal.keys()).isdisjoint(x), remains))
-    print(list(minimal.keys()))
+        progress.update()
+
+    with open("data/qc/minIds.txt", "w") as file:
+        file.write("\n".join(list(minimal.keys())))

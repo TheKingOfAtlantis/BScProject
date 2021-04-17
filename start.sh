@@ -1,18 +1,33 @@
-#!/bin/sh
+#!/bin/bash
 
-# Make the output directories if they do not exist
-mkdir -p data/genomes
+# If something goes wrong we want to exit immediately
+# Otherwise might cause downstream problems and error messeage would get lost
+set -e
 
-# Check if we have unzipped the genomes
-if [ ! -d "./data/genomes/archaea" ]; then
-    unzip ./data/Archaea_filtered_genomes.zip -d ./data
-    mv data/Archaea_filtered_genomes/ data/genomes/archaea
+header=$(tput bold; tput smul)
+headerend=$(tput sgr0)
+
+# Check if we have the genomes
+if [ ! -d "./data/genomes" ]; then
+    bash buildDataset.sh -y
 fi
-if [ ! -d "./data/genomes/bacteria" ]; then
-    unzip ./data/Bacterial_filtered_genomes.zip -d ./data
-    mv ./data/filtered_genomes/ ./data/genomes/bacteria
-fi
 
-python scripts/genomic-GC.py   # Process files to generate GC
-python scripts/gene-GC.py      # Process files to generate GC of CDS
-python scripts/gene-GC-plot.py # Produce the plots for cds
+echo
+echo "${header}Running QC Scripts${headerend}"
+echo
+
+python scripts/qc/avaliableIDs.py                # Identifies the minimal identifier set
+python scripts/qc/proteinCheck.py                # Analysis genomes for non-conforming CDSs
+python scripts/qc/proteinIsolate.py              # Produce list of non-conforming CDSs (Psuedogene check)
+python scripts/qc/genomeVsGenes.py               # Plots no. of genes vs genome size
+python scripts/qc/translationTable.py            # Identify translation table usage
+
+echo
+echo "${header}Running Analysis Scripts${headerend}"
+echo
+
+python scripts/analysis/genomicGC.py             # Process files to generate GC of genomes
+python scripts/analysis/stopUsageProkarytoes.py  # Process files to generate GC3 & Stop usage data
+python scripts/analysis/stopUsageHuman.py        # Process human CDSs for GC3 & Stop usage
+python scripts/analysis/stopUsagePlot.py         # Produce the plots for GC3 & stop usage
+python scripts/analysis/stopUsagePlotLogistic.py # Logistic regression on human data

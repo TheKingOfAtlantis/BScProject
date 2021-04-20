@@ -22,5 +22,23 @@
 
         Two contexts provide this isolation: non-coding RNAs (such as tRNA), as these are not processed by the ribosome, and organisms which simply do not utilise RF1 and RF2. Under the RF1:RF2 hypothesis, the usage of TAG, much like TAA and TGA, would be expected to be dependent on the GC content in both of these contexts and would likely not be as underrepresented as it appears to be in protein coding genes of bacteria.
 
+        \subsubsection{PLACHOLDER: Usage in Archaeal CDSs}
+            Archaea share much with bacteria in regards to the organisation of their genes and genomes. However, they differ when it comes to the process of terminating translation. While bacteria utilise RF1/2 to recognise stop codons, archaea (similar to eukaryotes) utilise only one release factor (aRF1) to recognise stop codons. As such differences with regards to stop codon usage should then primarily be a result of archaea using this single release factor to recognise all three stop codons.
+
+            Performing the same analysis on the protein coding genes of the archaeal genomes provided a similar story to that of the bacterial genomes, \cref{fig:stopUsage/archaea}.
+
+            \begin{figure}[H]
+                \centering
+                \includegraphics[width=.95\linewidth]{../plot/gc/cds+TAG/archaea-stop-shift0.png}
+                \caption{%
+                    Average GC3 content (\%) of genes against the utilisation of each stop codon (\%) for each archaeal genome within the phylogenetically controlled dataset
+                }
+                \label{fig:stopUsage/archaea}
+            \end{figure}
+
+            Even across archaea TAG usage remains lower than the usage TGA. However, unlike bacteria, archaea do seem to show a subtle positive correlation between their average GC3 content and the usage of the TAG stop codon.
+
+            Still, archaea seem to show a strong indication that process driving the supressed usage of TAG may not be driven by the relative expression of RF1/2.
+
 
 \end{document}

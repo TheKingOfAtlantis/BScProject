@@ -2,13 +2,16 @@
 \documentclass[../main.tex]{subfile}
 \begin{document} \section{Methods}
 
-    \subsection{Genome Dataset}
+    \subsection{Building the Genome Datasets}
         \subsection{Prokaryote Genomes}
-            The methodology for selecting the prokaryotic genomes was based on method used by \autocite{Ho2019} to generate their dataset. By filtering for the largest genome of each genus, ensuring that only one "representative" genome is used, the potential bias arising from oversampling phylogenetically non-independent genomes is reduced.
+            The methodology for selecting the prokaryotic genomes was based on method used by \textcite{Ho2019} to generate their dataset. By filtering for the largest genome of each genus, ensuring that only one "representative" genome is used, the potential bias arising from oversampling phylogenetically non-independent genomes is reduced.
 
             Using the NCBI Entrez utility API, summary data for the assemblies was to collected (including taxonomic IDs and assembly lengths) to enable filtering without downloading the entire set of genomes. After filtering, the assemblies were downloaded as Genbank flat files and, to enable them to function with some pre-existing code, were converted to EMBL files and renamed to utilise the accession ID in the file.
 
 
         \subsection{Human Genome}
             From GENCODE, the primary genome sequence and basic annotation file for release 37/GRCh38.p13 were downloaded. The GFF3 file was processed by gffutils to produce a SQLite database which is used to access the annotation information.
+    \subsection{Cleaning Protein Coding Genes}
+        In the prokaryotic datasets, protein coding genes checked against a three criteria to ensure that genes were well behaved: 1) sequences started and ended with a relevant start and stop codon (based on the translation table) 2) sequence length is a multiple of three (ensures sequence corresponds to a complete reading frame) 3) no internal stops present (based on the annotated start and stop). Any genes which failed to meet the criteria were recorded and dropped in subsequent analysis.
+
 \end{document}

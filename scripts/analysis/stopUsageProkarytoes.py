@@ -34,33 +34,20 @@ def processCDS(record, feature):
     return data
 
 def processRNA(record, feature):
-
-    # For RNA need to find first stop
-    indexPos = None
-
-    seq = feature.location.extract(record.seq)  # Extract the DNA sequence using the location
-    for i in range(3, len(seq)):
-        if(seq[i-3:i] in ["TAA", "TGA", "TAG", "TAC"]):
-            indexPos = i - 3
-            break
-
-    if(indexPos is None):
-        return []
-
     data = []
     # We want to explore value across frameshifts
     # So shift the frame over 2 codons worth of nucleotides
-    for shift in range(0, 6): # Check across 2 codons
+    for shift in range(0, 3): # Check across 2 codons
         loc = feature.location + shift # Add the shift the "in-frame" ORF location
         seq = loc.extract(record.seq)  # Extract the DNA sequence using the location
 
-        # Need to ensure we have a stop codon, otherwise we don't care
-        if seq[indexPos:indexPos+3] in ["TAA", "TGA", "TAG", "TAC"]:
-            data.append({                  # Record the following:
+        for stop in ["TAA", "TGA", "TAG", "TAC"]:
+            count = seq.count(stop, start = shift)
+            data.extend([{                 # Record the following:
                 "shift": shift,            # Shift we applied to find codon
                 "gc": SeqUtils.GC123(seq), # GC (incl. GC123) of sequence (given the shift)
-                "stop": str(seq[indexPos:indexPos+3]) # What stop codon we found
-            })
+                "stop": stop               # What stop codon we found
+            }] * count)
     return data
 
 def LoadRecord(file, toFind):

@@ -41,13 +41,14 @@ def processRNA(record, feature):
         loc = feature.location + shift # Add the shift the "in-frame" ORF location
         seq = loc.extract(record.seq)  # Extract the DNA sequence using the location
 
-        for stop in ["TAA", "TGA", "TAG", "TAC"]:
-            count = seq.count(stop, start = shift)
-            data.extend([{                 # Record the following:
-                "shift": shift,            # Shift we applied to find codon
-                "gc": SeqUtils.GC123(seq), # GC (incl. GC123) of sequence (given the shift)
-                "stop": stop               # What stop codon we found
-            }] * count)
+        for i in range(0, len(seq) - 3, 3):
+            codon = seq[i:i+3]
+            if codon in ["TAA", "TGA", "TAG", "TAC"]:
+                data.append({                  # Record the following:
+                    "shift": shift,            # Shift we applied to find codon
+                    "gc": SeqUtils.GC123(seq), # GC (incl. GC123) of sequence (given the shift)
+                    "stop": str(codon)         # What stop codon we found
+                })
     return data
 
 def LoadRecord(file, toFind):

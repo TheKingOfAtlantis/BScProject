@@ -43,6 +43,14 @@ def processRNA(record, feature):
     seq = feature.location.extract(record.seq)
     gc  = SeqUtils.GC123(seq)
 
+    for stop in ["TAA", "TGA", "TAG", "TAC"]:
+        count = seq.count(stop) # Count number of non-overlapping instances of each codon
+        data.extend([{          # Record the following:
+            "shift": "all",     # Shift we applied to find codon
+            "gc": gc,           # GC (incl. GC123) of sequence
+            "stop": str(stop)   # What stop codon we found
+        }] * count)
+
     # We want to explore value across frameshifts
     # So shift the frame over 2 codons worth of nucleotides
     for shift in range(0, 3): # Check across 2 codons
@@ -75,9 +83,7 @@ def LoadRecord(file, toFind):
 
 def concatPreprocess(data): return { k:pd.DataFrame(v) for k,v in data }
 
-toFind = ["CDS", "tRNA"]
-
-for geneType in toFind:
+for geneType in ["CDS", "tRNA"]:
     # Make sure we have the path to export to (including parents)
     Filesystem.mkdir(f"data/gc/{geneType.lower()}")
 

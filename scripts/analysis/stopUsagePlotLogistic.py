@@ -18,8 +18,8 @@ for stop in  ['TAA', 'TGA', 'TAG', "TAC"]:
         "x": human.gc3,
         "y": human.stop == stop # Whether each CDS has the stop we are checking for
     })
-    regression[codon] = sm.Logit(data.y, sm.add_constant(data.x)).fit()
-    print(regression[codon].summary())
+    regression[stop] = sm.Logit(data.y, sm.add_constant(data.x)).fit()
+    print(regression[stop].summary())
 
 def createPlot(codons, file):
     fig, axes = plt.subplots(nrows = len(codons), figsize = (16, 9), sharex=True)

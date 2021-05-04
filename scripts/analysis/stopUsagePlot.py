@@ -81,8 +81,8 @@ def plotGCvsFreq(name, freq, group, pdf = False):
         ax.set_ylim((-5, 105))
 
         Filesystem.mkdir(f"plot/gc/{group}")
-        fig.savefig(f"plot/gc/{group}/{name}-stop-shift{int(shift)}.png")
-        if(pdf): fig.savefig(f"plot/gc/{group}/{name}-stop-shift{int(shift)}.pdf")
+        fig.savefig(f"plot/gc/{group}/{name}-stop-shift{shift}.png")
+        if(pdf): fig.savefig(f"plot/gc/{group}/{name}-stop-shift{shift}.pdf")
         plt.close(fig)
 
 def load(file, group):

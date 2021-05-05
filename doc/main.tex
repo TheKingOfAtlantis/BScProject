@@ -55,6 +55,7 @@
 % \setlength{\parskip}{1em}
 
 \addbibresource{biblio.bib}
+\addbibresource{software.bib}
 
 \newcommand{\textapprox}{\raisebox{0.5ex}{\texttildelow}}
 \newcommand{\RNum}[1]{\uppercase\expandafter{\romannumeral #1\relax}}
@@ -79,6 +80,8 @@
 
 	\newpage \phantomsection
 	\addcontentsline{toc}{chapter}{Bibliography}
-	\printbibliography
+    \nocite{*}
+	\printbibliography[notkeyword=software]
+	\printbibliography[keyword=software, title={Software \& Libraries}]
 	\appendix\appendixpage
 \end{document}

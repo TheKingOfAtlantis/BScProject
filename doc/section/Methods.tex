@@ -1,17 +1,64 @@
 % !TeX root = ../main.tex
 \documentclass[../main.tex]{subfile}
 \begin{document} \section{Methods}
+    \subsection{General Methodology}
+        For performing the analysis and auxiliary tasks, a set of python (primarily) and R scripts were created. These utilise various 3rd party libraries to streamline data manipulation, statistics and data visualisation. A list of the relevant software and libraries is recorded below, \cref{table:method/software}.
 
-    \subsection{Building the Genome Datasets}
-        \subsection{Prokaryote Genomes}
-            The methodology for selecting the prokaryotic genomes was based on method used by \textcite{Ho2019} to generate their dataset. By filtering for the largest genome of each genus, ensuring that only one "representative" genome is used, the potential bias arising from oversampling phylogenetically non-independent genomes is reduced.
+        \begin{table}[H]
+            \centering
+            \caption{List of the software utilised (by conda package name)}
+            \begin{tabular}{@{} *{2}{r l}}
+                \toprule
+                Name           & Version & Name           & Version \\
+                \cmidrule{1-2}             \cmidrule(l){3-4}
+                python         & 3.6.10  & gffutils       & 0.10.1  \\
+                conda          & 4.10.1  & taxadb         & 0.12.0  \\
+                pandas         & 1.2.3   & r-base         & 4.0.3   \\
+                scipy          & 1.6.2   & r-essentials   & 4.0     \\
+                biopython      & 1.78    & r-tidyverse    & 1.3.1   \\
+                statsmodels    & 0.12.2  & r-ggplot2      & 3.3.3   \\
+                matplotlib     & 3.4.1   & r-ggrepel      & 0.9.1   \\
+                numpy          & 1.20.2  & & \\
+                tqdm           & 4.60.0  & & \\
+                \bottomrule
+            \end{tabular}
+            \label{table:method/software}
+        \end{table}
 
-            Using the NCBI Entrez utility API, summary data for the assemblies was to collected (including taxonomic IDs and assembly lengths) to enable filtering without downloading the entire set of genomes. After filtering, the assemblies were downloaded as Genbank flat files and, to enable them to function with some pre-existing code, were converted to EMBL files and renamed to utilise the accession ID in the file.
+        The scripts created are currently hosted on \href{Github}{\color{blue}{https://git.io/JO5wD}}.
 
+    \subsection{Generating the Genome Datasets}
+        \subsubsection{Prokaryote Genomes}
+            The set of prokaryotic genomes which were used, were generated based on the methods used by \textcite{Ho2019}: The set of genomes are filtered by selecting the largest genome within each genus as the ``representative genome'', this ensures that potential biases arising from oversampling phylogenetically non-independent genomes is minimised.
 
-        \subsection{Human Genome}
-            From GENCODE, the primary genome sequence and basic annotation file for release 37/GRCh38.p13 were downloaded. The GFF3 file was processed by gffutils to produce a SQLite database which is used to access the annotation information.
-    \subsection{Cleaning Protein Coding Genes}
-        In the prokaryotic datasets, protein coding genes checked against a three criteria to ensure that genes were well behaved: 1) sequences started and ended with a relevant start and stop codon (based on the translation table) 2) sequence length is a multiple of three (ensures sequence corresponds to a complete reading frame) 3) no internal stops present (based on the annotated start and stop). Any genes which failed to meet the criteria were recorded and dropped in subsequent analysis.
+            Thus, using the NCBI Entrez utility endpoints, summary data for the representative assemblies in the Prokaryotic RefSeq Genomes database (primarily the assembly length and taxonomic ID), were retrieved to enable the filtering process. Queries pertaining to the genus lineage were achieved through the \texttt{taxadb} library. The resulting list of assemblies were then downloaded. To allow interoperability and to simplify some workloads, the downloaded assemblies were converted to the EMBL file format, using the \texttt{Bio.AlignIO.convert(...)} function in \texttt{BioPython}, and renamed to match the result of \texttt{Bio.SeqRecord#id}.
+
+        \subsubsection{Human Genome}
+            The primary genome sequence and basic annotation files for the human genome were downloaded from \href{GENCODE}{\color{blue}{https://www.gencodegenes.org/human/}}, for release 37/GRCh38.p13. To avoid potential parsing and performance issues, the \textttt{gffutils} library was for annotation queries.
+
+            Subsequent to downloading the genomes, a list of the protein coding sequences to be used in later steps was generated. Akin to the representative genome of the prokaryotic dataset, the ID of the longest protein coding sequence in each gene was selected and stored for later use. Given that a single gene may encode multiple isoforms, it is a necessary step to minimise biases arising from oversampling non-independent sequences.
+
+    \subsection{Controlling Protein Coding Gene Quality}
+        Within the prokaryotic dataset, numerous features are marked as CDS (i.e. are protein coding sequences) but lack the expected properties. Many (but not all) of these non-conforming CDSs correspond to pseudogenes, which likely do not behave like protein coding genes and so such should not be included in the analysis of protein coding sequences. To remove these and other non-conforming CDSs, a set of three criteria were used to isolate them from subsequent analysis, which included:
+        \begin{enumerate}
+            \item Sequences should begin and end with the relevant start and stop codon (given their translation table)
+            \item The length of a sequence should be a multiple of three (to ensure it corresponded to a complete set of non-overlapping triplet codons)
+            \item No internal stops present (given the annotated start and stop)
+        \end{enumerate}
+
+        The process for controlling the quality of human coding sequences was primarily achieved in the previous step. By explicitly selecting only from transcript sequences with the ``protein_coding'' transcript type, pseudogenes \& other non-conforming transcript types are excluded from the pool of potential ``representative sequences''.
+
+    \subsection{Calculating Genomic GC3 and Codon Usage}
+        Principally the methodology applied to determine the genomic GC3 and relative codon usage for both protein coding sequences and tRNA is very similar, with differences primarily being related to the codon usage calculation.
+
+        For both the prokaryotic and human genomes, the GC3 of each sequence was determined, using BioPython (\texttt{Bio.SeqUtil.GC123(...)}) -- GC3 is an extension of GC, both which measure the percentage of a sequence that is composed of G \& C nucleotides, \cref{eq:method/GC}, with GC3 being the GC given only the third position nucleotides. For the prokaryotic dataset, the mean GC3 of the sequences being analysed was used to determined the genomic GC3. For the human dataset, the data was sorted and binned (100 bins) by GC3 content, then the mean GC3 of each bin was determined forming a pseudo-genomic GC3 surrogate.
+
+        \begin{equation}
+            GC = \frac{G + C}{A + T + G + C} \label{eq:method/GC}
+        \end{equation}
+
+        Two methods were used to calculate the relative codon usage. For protein coding sequences, the stop codon at the end of the sequence was recorded, this was repeated for downstream codon in the \numlist{0;1;2} frame shift positions. As for tRNA sequences, the number of stop codons along the entirety of each sequence was determined. In both cases, the sum total usage of each stop codon was calculated before dividing by the total number of stop codons found (aggregated separately for each frameshift).
+
+        The GC3 and stop codon usage was then plotted using Matplotlib.
 
 \end{document}

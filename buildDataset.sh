@@ -31,6 +31,9 @@ echo
 echo "Copying files to final location"
 cp -r data/genomes/build/out/* data/genomes/
 
+echo "Generating Dataset Statistics"
+python scripts/dataset/stats.py
+
 if [[ $1 =~ [Nn]$ ]]; then
     echo "Build files have been kept"
 elif [[ $1 =~ [Yy]$ ]]; then

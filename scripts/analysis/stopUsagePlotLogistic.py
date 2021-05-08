@@ -43,6 +43,6 @@ def createPlot(codons, file):
     plt.savefig(file)
     plt.close()
 
-createPlot(codons = ['TAA', 'TGA', 'TAG', "TAC"], file = "plot/gc/cds-human-logit-all.png")
-createPlot(codons = ['TAA', 'TGA', 'TAG'],        file = "plot/gc/cds-human-logit-TAG.png")
-createPlot(codons = ['TAA', 'TGA', 'TAC'],        file = "plot/gc/cds-human-logit-TAC.png")
+createPlot(codons = ['TAA', 'TGA', 'TAG', "TAC"], file = "plot/gc3/cds-human-logit-all.png")
+createPlot(codons = ['TAA', 'TGA', 'TAG'],        file = "plot/gc3/cds-human-logit-TAG.png")
+createPlot(codons = ['TAA', 'TGA', 'TAC'],        file = "plot/gc3/cds-human-logit-TAC.png")

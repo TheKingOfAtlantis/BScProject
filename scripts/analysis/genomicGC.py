@@ -3,6 +3,7 @@ sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
 
 from common import Filesystem
 from Bio import SeqIO, SeqUtils
+import pandas as pd
 
 def CalculateGC(file):
     record = next(SeqIO.parse(file, "embl"))
@@ -12,8 +13,17 @@ import json, pathlib
 if __name__ == "__main__":
     Filesystem.mkdir("data/gc/")
 
-    archaea_gc = Filesystem.loadGlob("data/genomes/archaea/*", CalculateGC, desc = "Archaea Genome GC")
-    with open("data/gc/archaea.json", "w") as js: json.dump(archaea_gc, js)
+    archaea_gc = dict(Filesystem.loadGlob("data/genomes/archaea/*", CalculateGC, desc = "Archaea Genome GC"))
+    archaea_gc = pd.DataFrame.from_dict(
+        archaea_gc, orient="index", columns=["gc"]
+    )
 
-    bacteria_gc = Filesystem.loadGlob("data/genomes/bacteria/*", CalculateGC, desc = "Bacteria Genome GC")
-    with open("data/gc/bacteria.json", "w") as js: json.dump(bacteria_gc, js)
+    bacteria_gc = dict(Filesystem.loadGlob("data/genomes/bacteria/*", CalculateGC, desc = "Bacteria Genome GC"))
+    bacteria_gc = pd.DataFrame.from_dict(
+        bacteria_gc, orient="index", columns=["gc"]
+    )
+
+    pd.concat([
+        archaea_gc,
+        bacteria_gc
+    ]).to_csv("data/gc/genomic.csv", index_label="genome")

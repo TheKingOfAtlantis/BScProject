@@ -5,6 +5,9 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
 
+import seaborn as sns
+sns.set(palette="colorblind")
+
 human = pd.read_json("data/gc/cds/human.json", orient = "table")
 human[["gc", "gc1", "gc2", "gc3"]] = pd.DataFrame(human.gc.tolist(), index=human.index)
 human = human[["shift", "stop", "gc3"]]
@@ -22,7 +25,8 @@ for stop in  ['TAA', 'TGA', 'TAG', "TAC"]:
     print(regression[stop].summary())
 
 def createPlot(codons, file):
-    fig, axes = plt.subplots(nrows = len(codons), figsize = (16, 9), sharex=True)
+    figsize = (5 * 1.61803399, 5)
+    fig, axes = plt.subplots(nrows = len(codons), figsize = figsize, sharex=True)
     for ax, stop in zip(axes, codons):
         data = pd.DataFrame({
             "x": human.gc3,

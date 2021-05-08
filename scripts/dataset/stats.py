@@ -1,10 +1,6 @@
 
 import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).parent.parent.absolute()))
-from IPython import get_ipython
-if(get_ipython() != None):
-    import os
-    os.chdir("../..")
 
 from common import Filesystem, Parallel
 
@@ -16,6 +12,9 @@ import statsmodels.api as sm
 
 import matplotlib.ticker as mticker
 import matplotlib.pyplot as plt
+
+import seaborn as sns
+sns.set(palette="colorblind")
 
 def getDB():
     from taxadb.taxid import TaxID

@@ -10,6 +10,9 @@ import numpy as np
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
 
+import seaborn as sns
+sns.set(palette="colorblind")
+
 genomicGC = pd.read_csv("data/gc/genomic.csv")
 
 def loadDataFrame(file):
@@ -63,7 +66,8 @@ def plotGCvsFreq(name, freq, group, pdf = False):
     # Create new plot for each frameshift
     for gcType in ["gc", "gc3"]:
         for shift in freq.columns.get_level_values("shift").unique():
-            fig, ax = plt.subplots(figsize=(16,9))
+            figsize = (5 * 1.61803399, 5)
+            fig, ax = plt.subplots(figsize=figsize)
             for codon in freq[shift].columns.get_level_values("stop").unique():
                 # Get the frequence and GC(3)
                 data = pd.DataFrame({

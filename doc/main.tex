@@ -34,10 +34,19 @@
 \usepackage[italicdiff]{physics}
 \usepackage{upgreek,chemmacros,chemfig}
 
-
-\usepackage[hidelinks]{hyperref}
+\usepackage[
+    colorlinks,
+    allcolors={black},
+    filecolor={blue},
+    urlcolor={blue}
+]{hyperref}
 \usepackage[nameinlink,noabbrev]{cleveref}
-\usepackage[style=authoryear-ibid]{biblatex}
+\usepackage[
+    style=bath,
+    sorting=yn,
+    backend=biber,
+    eprint=false,
+]{biblatex}
 \usepackage{todonotes}
 
 \let\mc\multicolumn
@@ -56,7 +65,22 @@
 
 \addbibresource{biblio.bib}
 \addbibresource{software.bib}
-
+% Harvard-bath bibliography contained various ()
+% Turns out it adds space for issues which we weren't giving
+\renewbibmacro*{journal+issuetitle}{%
+  \usebibmacro{journal}%
+  \setunit*{\addspace}%
+  \usebibmacro{isonline}%
+  \setunit*{\addcomma\space}%
+  \iffieldundef{series}
+    {}
+    {\newunit
+     \printfield{series}%
+     \setunit{\addcomma\space}}%
+  \usebibmacro{volume+number+eid}%
+  \setunit{\addcomma\space}%
+  \printfield{pubstate}%
+  \newunit}
 \newcommand{\textapprox}{\raisebox{0.5ex}{\texttildelow}}
 \newcommand{\RNum}[1]{\uppercase\expandafter{\romannumeral #1\relax}}
 
@@ -72,15 +96,14 @@
         Abstract goes here
     \end{abstract}
 
-    \subfile{section/Introduction}
-    \subfile{section/Methods}
-    \subfile{section/Results}
-    \subfile{section/Discussion}
-    \subfile{section/Conclusion}
+    \pagebreak\subfile{section/Introduction}
+    \pagebreak\subfile{section/Methods}
+    \pagebreak\subfile{section/Results}
+    \pagebreak\subfile{section/Discussion}
 
 	\newpage \phantomsection
 	\addcontentsline{toc}{chapter}{Bibliography}
-    \nocite{*}
+    \nocite{anaconda,SciPy,NumPy,pandas,biopython,statsmodels,matplotlib,R,tidyverse,ggrepel,tqdm,gffutils}
 	\printbibliography[notkeyword=software]
 	\printbibliography[keyword=software, title={Software \& Libraries}]
 	\appendix\appendixpage

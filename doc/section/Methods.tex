@@ -28,26 +28,26 @@
         The scripts created are currently hosted on Github at \href{https://git.io/JO5wD}{https://git.io/JO5wD}.
     \subsection{Generating the Genome Datasets}
         \subsubsection{Prokaryote Genomes}
-            The set of prokaryotic genomes which were used, were generated based on the methods used by \textcite{Ho2019}: The set of genomes are filtered by selecting the largest genome within each genus as the ``representative genome'', this ensures that potential biases arising from oversampling phylogenetically non-independent genomes is minimised.
+            The set of prokaryotic genomes used, were generated based on the methods used by \textcite{Ho2019}: The set of genomes are filtered by selecting the largest genome within each genus as the ``representative genome'', this ensures that potential biases arising from oversampling phylogenetically non-independent genomes is minimised.
 
             Using the NCBI Entrez utility endpoints, summary data for the representative assemblies in the Prokaryotic RefSeq Genomes database (primarily the assembly length and taxonomic ID) were retrieved to enable the filtering process. Queries pertaining to the genus lineage were achieved through the \texttt{taxadb} library. The resulting list of assemblies were then downloaded.
 
             In total 92 archaeal genomes and 1072 bacterial genomes were downloaded which were used throughout the analysis.
         \subsubsection{Human Genome}
-            The primary genome sequence and basic annotation files, for release 37/GRCh38.p13, of the human genome were downloaded from \href{GENCODE}{https://www.gencodegenes.org/human/}. To avoid potential parsing and performance issues, the \texttt{gffutils} library was for annotation queries.
+            The primary genome sequence and basic annotation files, for release 37/GRCh38.p13, of the human genome were downloaded from \href{GENCODE}{https://www.gencodegenes.org/human/}. To avoid potential parsing and performance issues, the \texttt{gffutils} library was used for annotation queries.
 
             Subsequent to downloading the genomes, a list of the protein coding sequences to be used in later steps was generated. Akin to the representative genome of the prokaryotic dataset, the ID of the longest protein coding sequence in each gene was selected and stored for later use. Given that a single gene may encode multiple isoforms, it ensures that biases arising from oversampling non-independent sequences are minimised.
     \subsection{Controlling Protein Coding Gene Quality}
-        Within the prokaryotic dataset, numerous features are marked as CDS (i.e. are protein coding sequences) but lack the expected properties. Many (but not all) of these non-conforming CDSs correspond to pseudogenes, which do not behave like protein coding genes and so such should not be included in the analysis of protein coding sequences. To remove these and other non-conforming CDSs, a set of three criteria were used to isolate them from subsequent analysis, which included:
+        Within the prokaryotic dataset, numerous features are marked as CDS (i.e. are protein coding sequences) but lack the expected properties. Many (but not all) of these non-conforming CDSs correspond to pseudogenes, which do not behave like protein coding genes and so should not be included in the analysis of protein coding sequences. To remove these and other non-conforming CDSs, a set of three criteria were used to isolate them from subsequent analysis, which included:
         \begin{enumerate}
             \item Sequences should begin and end with the relevant start and stop codon (given their translation table)
             \item The length of a sequence should be a multiple of three (to ensure it corresponded to a complete set of non-overlapping triplet codons)
             \item No internal stops present (given the annotated start and stop)
         \end{enumerate}
 
-        The process for controlling the quality of human coding sequences was primarily achieved in the previous step. By explicitly selecting only from transcript sequences with the "protein\_coding" transcript type, pseudogenes \& other non-conforming transcript types are excluded from the pool of potential "representative sequences".
+        The process for controlling the quality of human coding sequences was primarily achieved in the previous step. By explicitly selecting only from transcript sequences with the "protein\_coding" transcript type, pseudogenes and other non-conforming transcript types are excluded from the pool of potential "representative sequences".
     \subsection{Calculating Genomic GC}
-        GC measures the percentage of a sequence that is composed of G \& C nucleotides, \cref{eq:method/GC}. To determine the genomic GC of each genome, the aforementioned calculation is performed on the entire sequence of each genome.
+        GC measures the percentage of a sequence that is composed of G \& C nucleotides, \cref{eq:method/GC}. To determine the genomic GC of each genome, the calculation is performed on the entire sequence of each genome.
 
         \begin{equation}
             GC = \frac{G + C}{A + T + G + C} \label{eq:method/GC}
@@ -58,19 +58,19 @@
         The genomic GC3 content is given by the mean unweighted GC3 average of the protein coding sequences.
     \subsection{Determining Stop Codon Usage}
         \subsection{Stop Codon Usage in Protein Coding Sequences}
-            For both the prokaryotic and human genomes, the GC3 of each sequence was determined and a the stop codon of the sequence were recorded. If downstream stop codons were found in either the in-frame, +1 or +2 frame shift positions, the shift and codon were recorded.
+            For both the prokaryotic and human genomes, the GC3 of each sequence was determined and the stop codon of the sequence was recorded. If downstream stop codons were found in either the in-frame, +1 or +2 frame shift positions, the shift and codon were recorded.
 
             To determine the relative usage of stop codons in prokaryotes, the genomic GC3 content was calculated and the number of each codon found was divided by the total number of stop codons in that reading frame, giving the relative number of each stop codon in each reading frame. This was run for all prokaryotic genomes.
 
             For the human genome two methods of determining stop codon usage were performed.
-            The first is akin to the prokaryotic usage, the data was sorted and equally divided into bins ($n=100$) based on sequence GC3 content, which were then used to determine the "genomic GC3" of each bin. The relative stop codon usage was also determined for each bin.
+            The first is akin to the prokaryotic usage. The data was sorted and equally divided into bins ($n=100$) based on sequence GC3 content, which were then used to determine the "genomic GC3" of each bin. The relative stop codon usage was also determined for each bin.
             The second utilised fitting the usage of stop codons to a logistic model (logit), \cref{eq:method/logit}. Logistic regression gives the likelihood of a binary dependent event (usage of a particular stop codon) occurring given a continuous independent variable (GC3 content of the sequence).
 
             \begin{equation}
                 \ln\left(\frac{P}{1-P}\right) = \beta_0 + \beta_1 x \label{eq:method/logit}
             \end{equation}
         \subsection{Stop Codon Usage in tRNA}
-            For prokaryotic genome, the total number of each stop codons along each tRNA sequence was tabulated along with the genomic GC content. The number of each stop codon found in a genome was divided by the number of stop codons found in total to give the relative usage of each. The usage was not determined by using the length of the tRNA sequences, to provide a comparative value for the three potential state characteristic of stop codons in protein coding genes.
+            For prokaryotic genomes, the total number of each stop codons along each tRNA sequence was tabulated along with the genomic GC content. The number of each stop codon found in a genome was divided by the number of stop codons found in total to give the relative usage of each. The usage was not determined by using the length of the tRNA sequences, to provide a comparative value for the three potential state characteristics of stop codons in protein coding genes.
 
     \subsection{Significance of Slope Difference}
         To determine if TAG usage is significantly underutilised compared to TGA, the Z-score associated with the difference between their two gradients (the gradient of TAG and TGA usage), as described by \textcite{PATERNOSTER1998}, was used to determined -- the Z-score is given by:

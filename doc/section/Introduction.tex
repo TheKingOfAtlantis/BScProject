@@ -1,13 +1,12 @@
 % !TeX root = ../main.tex
 \documentclass[../main.tex]{subfile}
 \begin{document} \section{Introduction}
-    The termination of mRNA translation is classically controlled by a set of three stop codons: TAA, TAG, and TGA. Recognition of these codons triggers a choreographed sequence of events which ultimately result in the dismantling of the ribosome and releasing both the mRNA and synthesised nascent peptide chain.
-    Critical to this process are release factor (RF) proteins, which exhibit a form of biomimicry, as they share features the with structure and function of tRNA, recognising and binding to the stop sequence and triggering the dismantling process, although their functional form may differ from that tRNA \autocite{Nakamura2003}.
-
+    The termination of mRNA translation is classically controlled by a set of three stop codons: TAA, TAG, and TGA. Recognition of these codons triggers a choreographed sequence of events which ultimately result in the dismantling of the ribosome and the releasing of both the mRNA and synthesised nascent peptide chain.
+    Critical to this process are release factor (RF) proteins. These which exhibit a form of biomimicry as they share features the with structure and function of tRNA by recognising and binding to the stop sequence and triggering the dismantling process. However, their functional form may differ from that tRNA \autocite{Nakamura2003}.
     These proteins come in two classes: class I release factors perform the recognition of stop codons, as well as the subsequent hydrolysis of the peptidyl-tRNA (releasing the bound peptide) and class II are GTPases which facilitate the release of the class I release factors.
 
     In bacteria, three release factors (RF) are present which include RF1 and RF2 (the class I release factors which recognise TAA/TAG and TAA/TGA respectively), as well as RF3 (a class II release factor -- acts to release RF1/2 from the ribosome).
-    Eukaryotes and archaea contain a single class I release factor to recognise the stop codons, called eRF1 and aRF1 respectively. These proteins share a various features with each other, so much so that aRF1 is can replace the function of eRF1 \autocite{Dontsova2000}. Unlike their bacterial counterparts, with whom they share very little in sequence identity \autocite{Inagaki2000}, both eRF1 and aRF1 are capable of recognising all three termination codons.
+    Eukaryotes and archaea contain a single class I release factor to recognise the stop codons, called eRF1 and aRF1 respectively. These proteins shareW various features with each other, so much so that aRF1 is can replace the function of eRF1 \autocite{Dontsova2000}. Unlike their bacterial counterparts, with whom they share very little in sequence identity \autocite{Inagaki2000}, both eRF1 and aRF1 are capable of recognising all three termination codons.
 
     \begin{wrapfigure}{r}{7.5cm}
         \centering
@@ -18,15 +17,15 @@
         \label{fig:intro/codon-gc}
     \end{wrapfigure}
 
-    The usage of stop codons is under various pressures, including reducing readthrough rates \autocite{Liang2005}, stopping out-of-frame reading \autocite{Tse2010} and GC pressure on the genome \autocite{Povolotskaya2012}.
+    The usage of stop codons is under various pressures, including reducing readthrough rates \autocite{Liang2005}, stopping out-of-frame reading \autocite{Tse2010} and GC content of the genome \autocite{Povolotskaya2012}.
     It has been observed that as the GC content of a bacterial genomes increases, the prevalence of TAA stop codons decreases while TGA increases, responding as would be expected given their GC content. However, TAG breaks this trend, with its relative usage remaining low (20\%) and independent of the genomic GC content, countering what otherwise be expected, especially given how the other codons follow the pattern, \cref{fig:intro/codon-gc}.
     One hypothesis postulates that usage of TGA and TAG co-evolved with the relative expression of RF1 and RF2, \autocite{Korkmaz2014} -- henceforth, referred to as the RF1:RF2 hypothesis. Whether, the RF1:RF2 hypothesis properly explains the usage of TAG is unresolved.
-    Recently the same trends have been seen in downstream addition stop codons in bacteria, \autocite{Ho2019}. This might possibly reflect selection for termination if these are fail-safe stop codons to trap ribosomes that have read through the primary stop. Similarly, out-of-frame stop codons may function to catch frameshifted ribosomes.
+    Recently the same trends have been seen in downstream addition stop codons in bacteria, which are codons 3' of the primary stop codon, \autocite{Ho2019}. This might possibly reflect selection for termination if these are fail-safe stop codons to trap ribosomes that have read through the primary stop. Similarly, out-of-frame stop codons may function to catch frameshifted ribosomes.
 
     One could postulate that effects seen downstream may still be within the purview of RF1:RF2 through some other mechanism. As such, to properly isolate the influence of these proteins and to properly identify whether RF1:RF2 hypothesis holds true, this project aims to investigating the usage of the stop codons in eukaryotes and archaea, given that they utilise a single release factor for the recognition of all termination codons, at the terminus of protein coding sequences, as well as downstream additional codons.
 
     Additionally usage of TAG in non-coding RNA (such as tRNA) will be investigated, as these do not participate in translation. If the RF1:RF2 hypothesis hold true, it would be expected that usage of the stop codons should only be correlated with GC in all of these contexts.
 
-    For the eukaryotic analysis the human genome will be used. The GC content of the human genome fluctuates significantly, \autocite{human2001}. While the average GC content is around \SI{41}{\percent}, locally it be as low as \SI{30}{\percent} or as high as \SI{60}{\percent}. This level of variation roughly encompasses the same range of GC content seen across bacterial, \autocite{Sueoka1962}. Therefore, the human genome will not only will allow for the evaluation of whether the underutilisation of TAG is present in eukaryotes, but also whether it is an emergent phenomena across genomes or if it arises from within genomes.
+    For the eukaryotic analysis the human genome will be used. The GC content of the human genome fluctuates significantly, \autocite{human2001}. While the average GC content is around \SI{41}{\percent}, locally it can be as low as \SI{30}{\percent} or as high as \SI{60}{\percent}. This level of variation roughly encompasses the same range of GC content seen across bacterial genomes, \autocite{Sueoka1962}. Therefore, the human genome will not only will allow for the evaluation of whether the underutilisation of TAG is present in eukaryotes, but also whether it is an emergent phenomena across genomes or if it arises from within genomes.
 
 \end{document}

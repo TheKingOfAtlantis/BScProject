@@ -3,26 +3,25 @@
 \begin{document} \section{Results}
     \subsection{Underutilisation of TAG is Independent of Bacterial Phylogeny}
         As previously established, the RF1:RF2 hypothesis connects the paradoxical dissociation of TAG usage from GC content with the co-evolution of RF1:RF2 expression and genomic GC content.
-        The dataset used by \textcite{Korkmaz2014} to derive this hypothesis, utilised \num{4684} bacterial genomes (including plasmids) but did not exhibit control for phylogeny. By using bacterial genomes collected from NCBI RefSeq database ($n = 3125$), as a proxy to their dataset, it can be showed that the genomes are not equally distributed across genera, \cref{fig:results/dataset/pre}.
+        The dataset used by \textcite{Korkmaz2014} to derive this hypothesis, utilised \num{4684} bacterial genomes (including plasmids) but did not exhibit control for phylogeny. By using bacterial genomes collected from NCBI RefSeq database ($n = 3125$), as a proxy to their dataset, it can be showed that the genomes are not equally distributed across genera, \cref{fig:results/dataset/pre}. The distribution is clear highly skew with the largest genus (\textit{Streptomyces}) containing 87 genomes.
+        Approximately \SI{50}{\percent} of the genomes are accounted for by the largest \num{134} genera (\SI{11}{\percent}). While genera with only 1 genome accounted for \SI{64}{\percent} of the genera, they account only \SI{24}{\percent} of the genomes.
 
         \begin{figure}[H]
             \centering
             \includegraphics[width=.5\linewidth]{../plot/stats/prefiltered_genus_distrib.png}
             \caption{%
                 The distribution of bacterial genomes (from NCBI RefSeq prokaryotic genomes database) across each genus prior to phylogenetic filtering.
-                The distribution is clear highly skew with the largest genus (\textit{Streptomyces}) containing 87 genomes.
-                Approximately \SI{50}{\percent} of the genomes are accounted for by the largest \num{134} genera (\SI{11}{\percent}). While genera with only 1 genome accounted for \SI{64}{\percent} of the genera, they account only \SI{24}{\percent} of the genomes.
             }
             \label{fig:results/dataset/pre}
         \end{figure}
 
-        While unlikely, the TAG underutilisation could have arisen due to oversampling phylogenetically non-independent genomes. By replicating the analysis with a phylogenetically controlled database (utilising the largest genomes of each genus), it was possible to show that indeed the pattern of stop codon usage still holds, \cref{fig:results/bacteria/protein}, with the usage of TAG remaining underutilised and GC-independent.
+        While unlikely, the TAG underutilisation could have arisen due to oversampling phylogenetically non-independent genomes. By replicating the analysis with a phylogenetically controlled database (utilising the largest genomes of each genus), it was possible to show that indeed the pattern of stop codon usage still holds, \cref{fig:results/bacteria/protein}. The usage of TAA decreases with GC content ($\rho =$ \num{-0.92}), TGA increases ($\rho =$ \num{0.89}), and the usage of TAG remains uncorrelated ($\rho =$ \num{-0.10}) and relatively low at approximately \SI{20}{\percent} usage.
 
         \begin{figure}[H]
             \centering
             \includegraphics[width=.5\linewidth]{../plot/gc3/cds+TAG/bacteria-stop-shift0.png}
             \caption{%
-                Mean GC3 content against the relative frequency of each stop codon in the primary stop position of the protein coding sequences of each bacterial genome. As previously observed, the usage of TAA decreases with GC content ($\rho =$ \num{-0.92}), while TGA increases ($\rho =$ \num{0.89}), and the usage of TAG remains uncorrelated ($\rho =$ \num{-0.10}) and relatively low at approximately \SI{20}{\percent} usage.
+                Mean GC3 content against the relative frequency of each stop codon in the primary stop position of the protein coding sequences of each bacterial genome.
             }
             \label{fig:results/bacteria/protein}
         \end{figure}

@@ -43,7 +43,7 @@
 \usepackage[nameinlink,noabbrev]{cleveref}
 \usepackage[
     style=bath,
-    sorting=yn,
+    sorting=ynt,
     backend=biber,
     eprint=false,
 ]{biblatex}
@@ -62,7 +62,7 @@
 }
 
 % \setlength{\parskip}{1em}
-
+\assignrefcontextentries[]{*}
 \addbibresource{biblio.bib}
 \addbibresource{software.bib}
 % Harvard-bath bibliography contained various ()
@@ -103,6 +103,7 @@
 
 	\newpage \phantomsection
 	\addcontentsline{toc}{chapter}{Bibliography}
+    \newrefcontext[sorting=nyt]
     \nocite{anaconda,SciPy,NumPy,pandas,biopython,statsmodels,matplotlib,R,tidyverse,ggrepel,tqdm,gffutils}
 	\printbibliography[notkeyword=software]
 	\printbibliography[keyword=software, title={Software \& Libraries}]

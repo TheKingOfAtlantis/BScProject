@@ -31,7 +31,8 @@
             The set of prokaryotic genomes which were used, were generated based on the methods used by \textcite{Ho2019}: The set of genomes are filtered by selecting the largest genome within each genus as the ``representative genome'', this ensures that potential biases arising from oversampling phylogenetically non-independent genomes is minimised.
 
             Using the NCBI Entrez utility endpoints, summary data for the representative assemblies in the Prokaryotic RefSeq Genomes database (primarily the assembly length and taxonomic ID) were retrieved to enable the filtering process. Queries pertaining to the genus lineage were achieved through the \texttt{taxadb} library. The resulting list of assemblies were then downloaded.
-            % To allow interoperability and to simplify some workloads, the downloaded assemblies were converted to the EMBL file format, using the \texttt{Bio.AlignIO.convert(...)} function in \texttt{BioPython}, and renamed to match the result of \texttt{Bio.SeqRecord\#id}.
+
+            In total 92 archaeal genomes and 1072 bacterial genomes were downloaded which were used throughout the analysis.
         \subsubsection{Human Genome}
             The primary genome sequence and basic annotation files, for release 37/GRCh38.p13, of the human genome were downloaded from \href{GENCODE}{https://www.gencodegenes.org/human/}. To avoid potential parsing and performance issues, the \texttt{gffutils} library was for annotation queries.
 

@@ -2,43 +2,150 @@
 \documentclass[../main.tex]{subfile}
 \begin{document} \section{Results}
     \subsection{Underutilisation of TAG is Independent of Bacterial Phylogeny}
-        The dataset utilised by \autocite{PLACEHOLDER} for their analysis of stop codon usage in bacteria, while comprehensive (encompassing \num{0000} genomes), could potentially be effected by genera with larger sample sizes. Genomes within a genus are more akin to one another and as such have similar stop codon usage. This potentially means that the the underutilisation of TAG could have arisen from the overrepresentation of genomes of a particular genus which (for one reason or another) under-utilise TAG rather than arising from the RF1:RF2 hypothesis mechanism.
-
-        A phylogenetically controlled dataset was used (which selected the largest genome of each genus) and was  derived from the representative assemblies from the RefSeq database. This removed the potential for the oversampling of phylogenetically similar genomes. After filtering out non-conforming CDS features from each genome, the usage of each stop codon was collated along with the GC3 content of the genes. The relative usage of each stop codon and the average GC3 content of the associated genes was determined for each genome, this was then plotted as shown in \cref{fig:stopUsage/bacteria}. Even under phylogenetic control, the stop codon usage pattern persists, with the usage of TAG remaining relatively low, at \SI{20}{\percent} utilisation, and independent of GC3 content.
+        As previously established, the RF1:RF2 hypothesis connects the paradoxical dissociation of TAG usage from GC content with the co-evolution of RF1:RF2 expression and genomic GC content.
+        The dataset used by \textcite{Korkmaz2014} to derive this hypothesis, utilised \num{4684} bacterial genomes (including plasmids) but did not exhibit control for phylogeny. By using bacterial genomes collected from NCBI RefSeq database ($n = 3125$), as a proxy to their dataset, it can be showed that the genomes are not equally distributed across genera, \cref{fig:results/dataset/pre}.
 
         \begin{figure}[H]
             \centering
-            \includegraphics[width=.95\linewidth]{../plot/gc/cds+TAG/bacteria-stop-shift0.png}
+            \includegraphics[width=.5\linewidth]{../plot/stats/prefiltered_genus_distrib.png}
             \caption{%
-                Average GC3 content (\%) of genes against the utilisation of each stop codon (\%) of each bacterial genome within the phylogenetically controlled dataset
+                The distribution of bacterial genomes (from NCBI RefSeq prokaryotic genomes database) across each genus prior to phylogenetic filtering.
+                The distribution is clear highly skew with the largest genus (\textit{Streptomyces}) containing 87 genomes.
+                Approximately \SI{50}{\percent} of the genomes are accounted for by the largest \num{134} genera (\SI{11}{\percent}). While genera with only 1 genome accounted for \SI{64}{\percent} of the genera, they account only \SI{24}{\percent} of the genomes.
             }
-            \label{fig:stopUsage/bacteria}
+            \label{fig:results/dataset/pre}
         \end{figure}
 
-        With the phylogenetically controlled dataset able to reproduce the stop codon utilisation pattern, its clear that the results by \autocite{PLACEHOLDER} did not arise from oversampling, but from some underlying mechanism which drives the utilisation of TAG across bacteria. With this dataset it should be able to explore whether the RF1:RF2 hypothesis holds true within other contexts.
+        While unlikely, the TAG underutilisation could have arisen due to oversampling phylogenetically non-independent genomes. By replicating the analysis with a phylogenetically controlled database (utilising the largest genomes of each genus), it was possible to show that indeed the pattern of stop codon usage still holds, \cref{fig:results/bacteria/protein}, with the usage of TAG remaining underutilised and GC-independent.
 
-    \subsection{TAG is Underutilised Across the Domains of Life}
-        To establish if the unexpectedly low usage of the TAG stop codon is indeed a unique property of bacterial protein coding genes (arising from the mechanism proposed by the RF1:RF2 hypothesis), it is necessary to isolate the influence of RF1/2 from the usage of stop codons.
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=.5\linewidth]{../plot/gc3/cds+TAG/bacteria-stop-shift0.png}
+            \caption{%
+                Mean GC3 content against the relative frequency of each stop codon in the primary stop position of the protein coding sequences of each bacterial genome. As previously observed, the usage of TAA decreases with GC content ($\rho =$ \num{-0.92}), while TGA increases ($\rho =$ \num{0.89}), and the usage of TAG remains uncorrelated ($\rho =$ \num{-0.10}) and relatively low at approximately \SI{20}{\percent} usage.
+            }
+            \label{fig:results/bacteria/protein}
+        \end{figure}
+    \subsection{Downstream TAG Exhibits Same Underutilisation in Bacteria}
+        \textcite{Ho2019} showed that bacteria do not exhibit positive selection for additional downstream stop codons (3' of protein coding sequences). This indicates that TAA, TGA and TAG found downstream would not be under the same RF1:RF2 selection pressure as the primary stop codon. Given then, that these codons are not heavily involved with the translation machinery, does the usage of TAG follow GC in this context? By analysing the relative usage of TAA, TGA and TAG in the downstream codon, in all three potential reading frames (in-frame, +1 and +2 shifted), it is possible to show that TAG remains uncorrelated with GC3, \cref{fig:results/bacteria/protein/shifted}. This is further backed by similar analysis carried out by \textcite{Ho2019}, suggesting that the usage of TAG may be driven by another unknown process, rather than the RF1:RF2 expression ratio.
 
-        Two contexts provide this isolation: non-coding RNAs (such as tRNA), as these are not processed by the ribosome, and organisms which simply do not utilise RF1 and RF2. Under the RF1:RF2 hypothesis, the usage of TAG, much like TAA and TGA, would be expected to be dependent on the GC content in both of these contexts and would likely not be as underrepresented as it appears to be in protein coding genes of bacteria.
+        \begin{figure}[H]
+            \centering
+            \begin{subfigure}{.45\textwidth}
+                \includegraphics[width=\linewidth]{../plot/gc3/cds+TAG/bacteria-stop-shift3.png}
+                \caption{In-frame}
+            \end{subfigure}
+            \begin{subfigure}{.45\textwidth}
+                \includegraphics[width=\linewidth]{../plot/gc3/cds+TAG/bacteria-stop-shift4.png}
+                \caption{Shifted +1}
+            \end{subfigure}
+            \begin{subfigure}{.45\textwidth}
+                \includegraphics[width=\linewidth]{../plot/gc3/cds+TAG/bacteria-stop-shift5.png}
+                \caption{Shifted +2}
+            \end{subfigure}
 
-        \subsubsection{PLACHOLDER: Usage in Archaeal CDSs}
-            Archaea share much with bacteria in regards to the organisation of their genes and genomes. However, they differ when it comes to the process of terminating translation. While bacteria utilise RF1/2 to recognise stop codons, archaea (similar to eukaryotes) utilise only one release factor (aRF1) to recognise stop codons. As such differences with regards to stop codon usage should then primarily be a result of archaea using this single release factor to recognise all three stop codons.
+            \caption{%
+                The relative stop codon usage of the downstream codon, in the in-frame, +1 and +2 shifted reading frames, against the GC3 content of the associated protein coding sequence. In all three cases the usage appears to be the same as the usage of TAA, TGA and TAG in the primary stop codon, with TAA and TGA being dependent on GC3 and TAG being underutilised and independent of GC3 content.
+            }
+            \label{fig:results/bacteria/protein/shifted}
+        \end{figure}
 
-            Performing the same analysis on the protein coding genes of the archaeal genomes provided a similar story to that of the bacterial genomes, \cref{fig:stopUsage/archaea}.
 
-            \begin{figure}[H]
-                \centering
-                \includegraphics[width=.95\linewidth]{../plot/gc/cds+TAG/archaea-stop-shift0.png}
-                \caption{%
-                    Average GC3 content (\%) of genes against the utilisation of each stop codon (\%) for each archaeal genome within the phylogenetically controlled dataset
-                }
-                \label{fig:stopUsage/archaea}
-            \end{figure}
+    \subsection{Relative Usage of All Stop Codon in tRNA is Independent of GC}
+        Exploring the usage of stop codons in the context of non-coding RNA, such as tRNA, provides a context in which the usage of TAA, TGA and TAG is guaranteed to not be influenced by RF1:RF2 expression. Analysing the relative frequency of TAA, TGA and TAG along tRNA sequence in each genome presented an unusual pattern, \cref{fig:results/bacteria/tRNA}.
 
-            Even across archaea TAG usage remains lower than the usage TGA. However, unlike bacteria, archaea do seem to show a subtle positive correlation between their average GC3 content and the usage of the TAG stop codon.
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=.5\linewidth]{../plot/gc3/trna+TAG/bacteria-stop-shiftall.png}
+            \caption{%
+                Relative usage of the canonical stop codons (TAA, TGA, TAG) in bacterial tRNA sequences against genomic GC. All three codons are independent of genomic GC ($\rho =$ \numlist{-0.32;0.38;-0.17} for TAA, TAG and TGA, respectively) with TAG being more greatly utilised (around \SI{60}{\percent}) that TAA or TGA (both around \SI{20}{\percent}).
+            }
+            \label{fig:results/bacteria/tRNA}
+        \end{figure}
 
-            Still, archaea seem to show a strong indication that process driving the supressed usage of TAG may not be driven by the relative expression of RF1/2.
+        Rather than the relative stop codon usage following either a GC-driven or protein coding-like pattern, the usage of all three codons is independent of genomic GC and rather than the usage of TAA and TGA being higher (both around \SI{20}{\percent}), TAG usage is higher at around \SI{60}{\percent} usage. Making it inconclusive with regards to RF1:RF2 utilisation.
 
+    \subsection{Underutilisation of TAG is Present in all Prokaryotes}
+        Archaea share much with bacteria regarding the organisation of their genes and genomes. However, differ when it comes to the process of terminating translation.  Given then that Archaea do not share the same release factors with bacteria, it would be expected under the RR1:RF2 hypothesis that the usage of all stop codons in protein coding sequences be correlated with GC3 content.
+
+        Running the primary stop codon usage analysis on the phylogenetically controlled archaeal genomes, \cref{fig:results/stopUsage/archaea/protein}, showed that even across archaea, TAG usage remains significantly lower than TGA ($p=$ \num{2.69e-07}). However, unlike bacteria, archaea do seem to show a subtle positive correlation ($\rho=$ \num{0.48}, $p=$ \num{1.02e-06}) in the usage of the TAG stop codons.
+
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=.5\linewidth]{../plot/gc3/cds+TAG/archaea-stop-shift0.png}
+            \caption{%
+                Mean GC3 content (\%) against the relative usage of each stop codon (\%) in archaeal genome within the phylogenetically controlled dataset. The usage of stop codons resembles that of bacteria, with TAA usage decreasing with GC3 (), TGA increasing with GC3 and TAG remaining low and less dependent on GC.
+            }
+            \label{fig:results/stopUsage/archaea/protein}
+        \end{figure}
+
+        Additionally, exploring the usage of the downstream additional stop codons, \cref{fig:results/archaea/protein/shifted}, presents a similar pattern to those seen in bacteria, indicating that process driving the selection against TAG in both cases is likely the same. While the shifted reading frames most clear show an underutilisation of TAG, the in frame additional stop codons are still significantly underutilised compared to TGA ($p=$ \num{8.39e-4}). This strongly indicates that the RF1:RF2 hypothesis does not hold true.
+
+        \begin{figure}[H]
+            \centering
+            \begin{subfigure}{.45\textwidth}
+                \includegraphics[width=\linewidth]{../plot/gc3/cds+TAG/archaea-stop-shift3.png}
+                \caption{In-frame}
+            \end{subfigure}
+            \begin{subfigure}{.45\textwidth}
+                \includegraphics[width=\linewidth]{../plot/gc3/cds+TAG/archaea-stop-shift4.png}
+                \caption{Shifted +1}
+            \end{subfigure}
+            \begin{subfigure}{.45\textwidth}
+                \includegraphics[width=\linewidth]{../plot/gc3/cds+TAG/archaea-stop-shift5.png}
+                \caption{Shifted +2}
+            \end{subfigure}
+
+            \caption{%
+                The relative usage of downstream stop codon, in the in-frame, +1 and +2 shifted reading frames, against the GC3 content of the associated protein coding sequence for archaeal genomes.
+                The difference between the gradient of TAG and TGA in all potential reading frames is significant ($p=$ \numlist[scientific-notation = true, round-mode=figures, round-precision=2]{0.002595032496299135;4.2397523963103235e-12;1.0458613584895218e-15} for the in-frame, +1 and +2 shifted frames respectively)
+            }
+            \label{fig:results/archaea/protein/shifted}
+        \end{figure}
+    \subsection{TAG is Underutilised within the Human Genome}
+        Eukaryotes, as with archaea, utilise a single stop codon-recognising release factor to recognise all three stop codons. However, the organisation of genes and the genome differs greatly from prokaryotes. The question arises, does this difference effect the connection between stop codon usage and GC content?
+
+        Analysing the usage of stop codons in the human genome, binned by GC3 content, \cref{fig:results/stopUsage/human/protein}, suggests that even within the human genome TAG appears uncorrelated with GC3 content.
+        Further testing the utilisation of stop codons via a logistic regression, \cref{fig:results/stopUsage/human/protein/logistic}, suggested that their is a much weaker positive correlation between the usage of TAG and GC3 content of individual verse TGA, suggesting that it is underutilised in the human genome.
+
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=.5\linewidth]{../plot/gc3/cds+TAG/human-stop-shift0.png}
+            \caption{%
+                Mean GC3 content against the relative frequency of each stop codon in the primary stop position of each human protein coding sequence bin (total bins = 100). The usage of TAA decreases with GC content ($\rho =$ \num{-0.83}, $p=$ \num[round-mode=figures, round-precision=2]{1.2022048763452487e-26}), while TGA increases ($\rho =$ \num{0.79}, $p=$ \num[round-mode=figures, round-precision=2]{1.3965189227218565e-22}), and the usage of TAG has no significant correlation ($\rho =$ \num{0.145}, $p=$ \num{0.148}) with relatively low usage.
+            }
+            \label{fig:results/stopUsage/human/protein}
+        \end{figure}
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=.5\linewidth]{../plot/gc3/cds-human-logit-TAG.png}
+            \caption{%
+                Logit regression analysis was carried out (using statsmodels) on stop codon usage in human protein coding sequences, with the true value being assigned when the given codon was present, against the GC3 content of the sequence -- individual data points were omitted for clarity.
+                The coefficients given by the regression analysis for TAA, TGA and TAG are \numlist[round-mode=figures, round-precision=2]{-0.024661429054124846;0.019693170598609398;0.002764100041099037} with $p=$ \numlist[round-mode=figures, round-precision=2]{3.206199463104733e-112;4.1663916779118886e-86;0.026243940123511982}.
+            }
+            \label{fig:results/stopUsage/human/protein/logistic}
+        \end{figure}
+
+    % \subsection{}
+    %     The evidence for TAG being underutilised across all domains is clear,
+    % \begin{figure}[H]
+    %     \centering
+    %     \begin{subfigure}{.45\textwidth}
+    %         \includegraphics[width=\linewidth]{../plot/gc3/cds+TAC/bacteria-stop-shift3.png}
+    %         \caption{In-frame}
+    %     \end{subfigure}
+    %     \begin{subfigure}{.45\textwidth}
+    %         \includegraphics[width=\linewidth]{../plot/gc3/cds+TAC/bacteria-stop-shift4.png}
+    %         \caption{Shifted +1}
+    %     \end{subfigure}
+    %     \begin{subfigure}{.45\textwidth}
+    %         \includegraphics[width=\linewidth]{../plot/gc3/cds+TAC/bacteria-stop-shift5.png}
+    %         \caption{Shifted +2}
+    %     \end{subfigure}
+
+    %     \caption{%
+    %     }
+    %     \label{fig:results/bacteria/TAC/shifted}
+    % \end{figure}
 
 \end{document}

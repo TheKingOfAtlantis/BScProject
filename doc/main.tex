@@ -85,20 +85,17 @@
 \newcommand{\RNum}[1]{\uppercase\expandafter{\romannumeral #1\relax}}
 
 \begin{document}
-    \title{\textit{(Working Title)} UAG Codon Paradox and the RF1:RF2 Hypothesis}
+    \title{TAG Codon Usage Paradox and the RF1:RF2 Hypothesis: Does it Explain Stop Codon Usage?}
     \date{\today}
-    \author{Sulaiman Sulaiman}
+    \author{Sulaiman Sulaiman \\ Word Count: 3314}
     \maketitle
 
-    \begin{abstract}
-        {\textbf{Abstract}\vspace{1em}}
-
-        Abstract goes here
-    \end{abstract}
+    \subfile{section/LaySummary.tex}
+    \subfile{section/Abstract.tex}
 
     \pagebreak\subfile{section/Introduction}
-    \pagebreak\subfile{section/Methods}
-    \pagebreak\subfile{section/Results}
+    \subfile{section/Methods}
+    \subfile{section/Results}
     \pagebreak\subfile{section/Discussion}
 
 	\newpage \phantomsection
@@ -107,5 +104,4 @@
     \nocite{anaconda,SciPy,NumPy,pandas,biopython,statsmodels,matplotlib,R,tidyverse,ggrepel,tqdm,gffutils}
 	\printbibliography[notkeyword=software]
 	\printbibliography[keyword=software, title={Software \& Libraries}]
-	\appendix\appendixpage
 \end{document}

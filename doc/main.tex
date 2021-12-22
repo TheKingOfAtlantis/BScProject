@@ -1,0 +1,115 @@
+\documentclass[
+    emulatestandardclasses,
+    parskip=half,
+]{scrartcl}
+\usepackage{scrhack}
+
+\usepackage[a4paper,
+    top=1.25in,
+    left=.75in,
+    bottom=1.5in,
+    right=.75in
+]{geometry}
+\usepackage{subfiles}
+
+\usepackage[british]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{fontenc}
+
+\usepackage{csquotes,graphicx,caption,subcaption,float,wrapfig}
+\usepackage{booktabs,multirow,makecell,longtable,threeparttable,tabularx}
+\usepackage{pdflscape}
+\usepackage{pdfpages}
+\usepackage[toc, page]{appendix}
+
+\usepackage[
+	separate-uncertainty   = true,
+	multi-part-units       = single,
+	range-units            = single,
+	list-units             = single,
+	table-number-alignment = center,
+	table-text-alignment   = center
+]{siunitx}
+\usepackage{gensymb,mathtools,amssymb,xfrac}
+\usepackage[italicdiff]{physics}
+\usepackage{upgreek,chemmacros,chemfig}
+
+\usepackage[
+    colorlinks,
+    allcolors={black},
+    filecolor={blue},
+    urlcolor={blue}
+]{hyperref}
+\usepackage[nameinlink,noabbrev]{cleveref}
+\usepackage[
+    style=bath,
+    sorting=nyt,
+    backend=biber,
+    eprint=false,
+]{biblatex}
+\usepackage{todonotes}
+
+\let\mc\multicolumn
+\let\mr\multirow
+
+% \maxdeadcycles=1000
+
+\DeclareSIUnit\G{G}
+\chemsetup{ modules = all }
+\chemsetup[reactions]{
+	tag-open = (,
+	tag-close =)
+}
+\usepackage{setspace}
+\onehalfspacing
+\captionsetup{
+    format=hang,
+    labelfont=bf
+}
+\captionsetup[wrapfigure]{format=plain}
+
+% \setlength{\parskip}{1em}
+\addbibresource{biblio.bib}
+\addbibresource{software.bib}
+% Harvard-bath bibliography contained various ()
+% Turns out it adds space for issues which we weren't giving
+\renewbibmacro*{journal+issuetitle}{%
+  \usebibmacro{journal}%
+  \setunit*{\addspace}%
+  \usebibmacro{isonline}%
+  \setunit*{\addcomma\space}%
+  \iffieldundef{series}
+    {}
+    {\newunit
+     \printfield{series}%
+     \setunit{\addcomma\space}}%
+  \usebibmacro{volume+number+eid}%
+  \setunit{\addcomma\space}%
+  \printfield{pubstate}%
+  \newunit}
+\newcommand{\textapprox}{\raisebox{0.5ex}{\texttildelow}}
+\newcommand{\RNum}[1]{\uppercase\expandafter{\romannumeral #1\relax}}
+
+\begin{document}
+    \title{TAG Codon Usage Paradox and the RF1:RF2 Hypothesis: Does it Explain Stop Codon Usage?}
+    \date{\today}
+    \author{Sulaiman Sulaiman \\ Word Count: 3314}
+    \maketitle
+
+    \subfile{section/LaySummary.tex}
+    \subfile{section/Abstract.tex}
+
+    \pagebreak\subfile{section/Introduction}
+    \subfile{section/Methods}
+    \subfile{section/Results}
+    \pagebreak\subfile{section/Discussion}
+    \pagebreak\section*{Acknowledgment}
+        I would like to thanks Laurence Hurst for the guidance and support that they have provided throughout the process of researching and writing up the project.
+
+	\newpage \phantomsection
+	\addcontentsline{toc}{chapter}{Bibliography}
+    \nocite{anaconda,SciPy,NumPy,pandas,biopython,statsmodels,matplotlib,R,tidyverse,ggrepel,tqdm,gffutils}
+    \newrefcontext[sorting=nty]
+    \printbibliography[notkeyword=software]
+	\printbibliography[keyword=software, title={Software \& Libraries}]
+\end{document}
